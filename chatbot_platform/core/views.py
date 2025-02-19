@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -47,22 +47,37 @@ def logout_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, "dashboard.html")
+    # Retrieve all uploaded knowledge bases for the logged-in user
+    knowledge_bases = KnowledgeBase.objects.filter(user=request.user)
+
+    return render(request, "dashboard.html", {"knowledge_bases": knowledge_bases})
 
 @login_required
-def upload_knowledge_base(request):
+def home_view(request):
     if request.method == "POST":
         form = KnowledgeBaseForm(request.POST, request.FILES)
         if form.is_valid():
             knowledge_base = form.save(commit=False)
-            knowledge_base.user = request.user  # Associate the uploaded knowledge base with the logged-in user
+            knowledge_base.user = request.user
             knowledge_base.save()
             messages.success(request, "Knowledge base uploaded successfully!")
-            # return redirect('dashboard')  # Redirect back to dashboard (or a dedicated page)
+            return redirect('dashboard')  # Redirect to the dashboard after successful upload
         else:
             messages.error(request, "There was an error with your upload.")
     else:
         form = KnowledgeBaseForm()
+    if form.is_valid():
+        knowledge_base = form.save(commit=False)
+        knowledge_base.user = request.user
+        knowledge_base.save()
+        print(f"Knowledge base saved: {knowledge_base.title}")
 
-    return render(request, "upload_knowledge_base.html", {"form": form})
+    return render(request, "home.html", {"form": form})
 
+@login_required
+def proceed_view(request, kb_id):
+    # Retrieve the specific knowledge base
+    knowledge_base = get_object_or_404(KnowledgeBase, id=kb_id, user=request.user)
+    
+    # Render a page where further actions can be taken
+    return render(request, "proceed.html", {"knowledge_base": knowledge_base})

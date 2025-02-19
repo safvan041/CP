@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proceed</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        main h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #007bff;
+        }
+
+        p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        p strong {
+            color: #555;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <label for="model-select">Select Model:</label>
+            <select id="model-select">
+                <option value="llama">Llama</option>
+                <option value="openai">OpenAI GPT</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <h1>Proceed with Knowledge Base</h1>
+        <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+    </header>
+
+    <main>
+        <h2>Knowledge Base Details</h2>
+        <p><strong>Title:</strong> {{ knowledge_base.title }}</p>
+        <p><strong>Uploaded On:</strong> {{ knowledge_base.created_at }}</p>
+        <p><strong>File:</strong> <a href="{{ knowledge_base.file.url }}" download>Download</a></p>
+        
+        <!-- Add your custom functionality here -->
+        <p>Further actions will be implemented here...</p>
+    </main>
+</body>
+</html>

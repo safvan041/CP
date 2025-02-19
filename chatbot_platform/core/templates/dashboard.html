@@ -1,43 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
             margin: 0;
             padding: 0;
+            background-color: #f3f4f6;
         }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-top: 20px;
-        }
-        a {
-            display: inline-block;
-            margin: 20px auto;
-            text-align: center;
-            color: white;
-            background-color: #007bff;
-            text-decoration: none;
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px 20px;
+            background-color: #1e293b;
+            color: white;
+        }
+        main {
+            padding: 20px;
+        }
+        .knowledge-base-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .knowledge-base-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
             border-radius: 5px;
-            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        a:hover {
-            background-color: #0056b3;
+        .buttons {
+            margin-top: 10px;
         }
-        .container {
-            text-align: center;
-            margin-top: 100px;
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            cursor: pointer;
+        }
+        .btn-back {
+            background-color: #6b7280; /* Gray */
+        }
+        .btn-logout {
+            background-color: #6b7280; /* Gray */
+        }
+        .btn-proceed {
+            background-color: #2563eb; /* Blue */
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Welcome, {{ request.user.username }}</h2>
-        <a href="{% url 'logout' %}">Logout</a>
-    </div>
+    <header>
+        <h1>Dashboard</h1>
+        <div class="header-right">
+            <a href="{% url 'logout' %}" style="color: white; text-decoration: none;" class="btn btn-logout">Logout</a>
+            <a href="{% url 'home' %}" style="color: white; text-decoration: none;" class="btn btn-back">Back</a>
+        </div>
+        
+    </header>
+
+    <main>
+        <h2>Your Uploaded Knowledge Bases</h2>
+
+        <ul class="knowledge-base-list">
+            {% for kb in knowledge_bases %}
+            <li class="knowledge-base-item">
+                <p><strong>Title:</strong> {{ kb.title }}</p>
+                <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
+                <p><strong>File:</strong> <a href="{{ kb.file.url }}" download>Download</a></p>
+                <div class="buttons">
+                    <!-- Back Button -->
+                    <!-- <a href="{% url 'home' %}" class="btn btn-back">Back</a> -->
+                    <!-- Proceed Button -->
+                    <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
+                </div>
+            </li>
+            {% empty %}
+            <li>No knowledge bases uploaded yet.</li>
+            {% endfor %}
+        </ul>
+    </main>
 </body>
 </html>
