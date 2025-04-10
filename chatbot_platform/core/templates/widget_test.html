@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Widget</title></head>
+<body>
+    <h2>Testing Widget for: {{ kb.title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label>Ask your question:</label>
+        <input type="text" name="query">
+        <button type="submit">Ask</button>
+    </form>
+
+    {% if response %}
+        <p><strong>Answer:</strong> {{ response }}</p>
+    {% endif %}
+</body>
+</html>

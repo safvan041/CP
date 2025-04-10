@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -5,6 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import KnowledgeBaseForm
 from .models import KnowledgeBase
+from .utils.file_reader import extract_text_from_file
+from .utils.vector_logic import embed_and_store
 
 
 def signup_view(request):
@@ -76,8 +79,20 @@ def home_view(request):
 
 @login_required
 def proceed_view(request, kb_id):
-    # Retrieve the specific knowledge base
-    knowledge_base = get_object_or_404(KnowledgeBase, id=kb_id, user=request.user)
-    
-    # Render a page where further actions can be taken
-    return render(request, "proceed.html", {"knowledge_base": knowledge_base})
+    kb = get_object_or_404(KnowledgeBase, pk=kb_id)
+
+    file_path = kb.file.path
+    extracted_text = extract_text_from_file(file_path)
+
+    # Embed and store
+    vector_index_name = f"kb_{kb.id}"
+    success = embed_and_store([extracted_text], index_name=vector_index_name)
+
+    # Mark KB as embedded
+    kb.is_embedded = True
+    kb.save()
+
+    return render(request, 'proceed.html', {'knowledge_base': kb})
+def test_widget_view(request, pk):
+    kb = get_object_or_404(KnowledgeBase, pk=pk)
+    return render(request, 'widget_test.html', {'kb': kb})

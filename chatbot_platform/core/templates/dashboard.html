@@ -75,10 +75,11 @@
                 <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
                 <p><strong>File:</strong> <a href="{{ kb.file.url }}" download>Download</a></p>
                 <div class="buttons">
-                    <!-- Back Button -->
-                    <!-- <a href="{% url 'home' %}" class="btn btn-back">Back</a> -->
-                    <!-- Proceed Button -->
                     <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
+                    
+                    {% if kb.is_embedded %}
+                        <a href="{% url 'test_widget' kb.id %}" class="btn btn-widget">Test Widget</a>
+                    {% endif %}
                 </div>
             </li>
             {% empty %}
