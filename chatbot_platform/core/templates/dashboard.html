@@ -53,6 +53,9 @@
         .btn-proceed {
             background-color: #2563eb; /* Blue */
         }
+        .btn-test {
+            background-color: #4a5bde; /* Green */
+        }
     </style>
 </head>
 <body>
@@ -78,7 +81,7 @@
                     <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
                     
                     {% if kb.is_embedded %}
-                        <a href="{% url 'test_widget' kb.id %}" class="btn btn-widget">Test Widget</a>
+                        <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test">Test Widget</a>
                     {% endif %}
                 </div>
             </li>

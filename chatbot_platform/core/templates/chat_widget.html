@@ -1,0 +1,45 @@
+<!-- templates/chat_widget.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat with KnowledgeBase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #chat-box { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
+        .user-msg { color: blue; }
+        .bot-msg { color: green; }
+    </style>
+</head>
+<body>
+    <h2>Chat with: {{ kb.title }}</h2>
+    <div id="chat-box"></div>
+    <form id="chat-form">
+        <input type="text" id="message" placeholder="Ask something..." autocomplete="off" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('message');
+        const chatBox = document.getElementById('chat-box');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = input.value;
+            chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${msg}</div>`;
+            input.value = '';
+
+            const response = await fetch("{% url 'chat_api' kb.widget_slug %}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+                body: JSON.stringify({ message: msg })
+            });
+
+            const data = await response.json();
+            chatBox.innerHTML += `<div class="bot-msg"><strong>Bot:</strong> ${data.response}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
