@@ -10,7 +10,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/", views.dashboard_view, name="dashboard"), 
     path("proceed/<int:kb_id>/", views.proceed_view, name="proceed"),
-    path('widget/<int:pk>/', views.test_widget_view, name='test_widget')
-
+    path('chat/<slug:widget_slug>/', views.chat_widget_view, name='chat_widget'),
+    path('api/chat/<str:widget_slug>/', views.chat_api_view, name='chat_api'),
     
 ]

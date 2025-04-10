@@ -1,4 +1,7 @@
 import os
+import uuid
+import json
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -8,6 +11,8 @@ from .forms import KnowledgeBaseForm
 from .models import KnowledgeBase
 from .utils.file_reader import extract_text_from_file
 from .utils.vector_logic import embed_and_store
+from embeddings.embedding_service import get_embedding_model
+from .utils.vector_logic import search_similar_chunks
 
 
 def signup_view(request):
@@ -81,18 +86,40 @@ def home_view(request):
 def proceed_view(request, kb_id):
     kb = get_object_or_404(KnowledgeBase, pk=kb_id)
 
-    file_path = kb.file.path
-    extracted_text = extract_text_from_file(file_path)
+    if not kb.is_embedded:
+        file_path = kb.file.path
+        extracted_text = extract_text_from_file(file_path)
 
-    # Embed and store
-    vector_index_name = f"kb_{kb.id}"
-    success = embed_and_store([extracted_text], index_name=vector_index_name)
+        model = get_embedding_model()
+        vector_index_name = f"kb_{kb.id}"
+        embed_and_store([extracted_text], vector_index_name, model)
 
-    # Mark KB as embedded
-    kb.is_embedded = True
-    kb.save()
+        # Generate a unique widget slug
+        kb.widget_slug = str(uuid.uuid4())[:8]  # short, unique
+        kb.is_embedded = True
+        kb.save()
 
     return render(request, 'proceed.html', {'knowledge_base': kb})
-def test_widget_view(request, pk):
-    kb = get_object_or_404(KnowledgeBase, pk=pk)
-    return render(request, 'widget_test.html', {'kb': kb})
+
+def chat_widget_view(request, widget_slug):
+    kb = get_object_or_404(KnowledgeBase, widget_slug=widget_slug)
+    return render(request, 'chat_widget.html', {'kb': kb})
+
+def chat_api_view(request, widget_slug):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+
+        kb = get_object_or_404(KnowledgeBase, widget_slug=widget_slug)
+        model = get_embedding_model()
+        index_name = f"kb_{kb.id}"
+
+        # Search similar content from vector store
+        results = search_similar_chunks(user_message, index_name, model)
+
+        # For now, just return the top match
+        top_response = results[0] if results else "Sorry, I couldn't find anything relevant."
+        return JsonResponse({'response': top_response})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
