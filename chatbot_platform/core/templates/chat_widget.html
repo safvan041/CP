@@ -1,34 +1,121 @@
-<!-- templates/chat_widget.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Chat with KnowledgeBase</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #chat-box { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
-        .user-msg { color: blue; }
-        .bot-msg { color: green; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+        h2 {
+            margin-bottom: 1rem;
+        }
+        #chat-box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            height: 400px;
+            overflow-y: scroll;
+            background: white;
+            border-radius: 8px;
+        }
+        .msg {
+            margin-bottom: 12px;
+        }
+        .user-msg {
+            color: #2563eb;
+        }
+        .bot-msg {
+            color: #10b981;
+        }
+        .timestamp {
+            font-size: 0.75rem;
+            color: #6b7280;
+            display: block;
+            margin-top: 2px;
+        }
+        #chat-form {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #message {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1e40af;
+        }
+        #typing-indicator {
+            font-style: italic;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+        #mic-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
     <h2>Chat with: {{ kb.title }}</h2>
     <div id="chat-box"></div>
+    <div id="typing-indicator" style="display: none;">Bot is typing...</div>
     <form id="chat-form">
         <input type="text" id="message" placeholder="Ask something..." autocomplete="off" required>
         <button type="submit">Send</button>
+        <button id="mic-button" title="Voice Input">🎤</button>
     </form>
 
     <script>
         const form = document.getElementById('chat-form');
         const input = document.getElementById('message');
         const chatBox = document.getElementById('chat-box');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const micButton = document.getElementById('mic-button');
+
+        // Load chat history from sessionStorage
+        window.addEventListener('load', () => {
+            const history = JSON.parse(sessionStorage.getItem('chatHistory')) || [];
+            history.forEach(item => chatBox.innerHTML += item);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        function appendMessage(html) {
+            chatBox.innerHTML += html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            const history = JSON.parse(sessionStorage.getItem('chatHistory')) || [];
+            history.push(html);
+            sessionStorage.setItem('chatHistory', JSON.stringify(history));
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            return `<span class="timestamp">${now.toLocaleTimeString()}</span>`;
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const msg = input.value;
-            chatBox.innerHTML += `<div class="user-msg"><strong>You:</strong> ${msg}</div>`;
+            appendMessage(`<div class="msg user-msg"><strong>You:</strong> ${msg}${getTimestamp()}</div>`);
             input.value = '';
+
+            typingIndicator.style.display = 'block';
 
             const response = await fetch("{% url 'chat_api' kb.widget_slug %}", {
                 method: "POST",
@@ -37,9 +124,33 @@
             });
 
             const data = await response.json();
-            chatBox.innerHTML += `<div class="bot-msg"><strong>Bot:</strong> ${data.response}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
+            typingIndicator.style.display = 'none';
+            appendMessage(`<div class="msg bot-msg"><strong>Bot:</strong> ${data.response}${getTimestamp()}</div>`);
         });
+
+        // Voice input
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            micButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                recognition.start();
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                input.value = transcript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error", event);
+            };
+        } else {
+            micButton.style.display = 'none';
+        }
     </script>
 </body>
 </html>

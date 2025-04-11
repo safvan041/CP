@@ -1,94 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #1e293b;
-            color: white;
-        }
-        main {
-            padding: 20px;
-        }
-        .knowledge-base-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        .knowledge-base-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .buttons {
-            margin-top: 10px;
-        }
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            color: white;
-            cursor: pointer;
-        }
-        .btn-back {
-            background-color: #6b7280; /* Gray */
-        }
-        .btn-logout {
-            background-color: #6b7280; /* Gray */
-        }
-        .btn-proceed {
-            background-color: #2563eb; /* Blue */
-        }
-        .btn-test {
-            background-color: #4a5bde; /* Green */
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | Chatbot Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: #1e293b;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .header-right a {
+      margin-left: 16px;
+      padding: 10px 14px;
+      background-color: #475569;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+
+    .header-right a:hover {
+      background-color: #334155;
+    }
+
+    main {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .knowledge-base-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .knowledge-base-item {
+      background-color: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .knowledge-base-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .knowledge-base-item p {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .knowledge-base-item a {
+      text-decoration: none;
+      color: #010101;
+      font-weight: 500;
+    }
+
+    .buttons {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: black;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      color: white;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-proceed {
+      background-color: #2563eb;
+    }
+
+    .btn-proceed:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-test {
+      background-color: #16a34a;
+      color: black;
+    }
+
+    .btn-test:hover {
+      background-color: #15803d;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 14px;
+      color: #6b7280;
+      background-color: #f8fafc;
+    }
+
+    @media (max-width: 500px) {
+      .header-right a {
+        padding: 8px 12px;
+        margin-left: 8px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Dashboard</h1>
-        <div class="header-right">
-            <a href="{% url 'logout' %}" style="color: white; text-decoration: none;" class="btn btn-logout">Logout</a>
-            <a href="{% url 'home' %}" style="color: white; text-decoration: none;" class="btn btn-back">Back</a>
+
+  <header>
+    <h1>Dashboard</h1>
+    <div class="header-right">
+      <a href="{% url 'home' %}" class="btn btn-back">Back</a>
+      <a href="{% url 'logout' %}" class="btn btn-logout">Logout</a>
+    </div>
+  </header>
+
+  <main>
+    <h2>Your Uploaded Knowledge Bases</h2>
+    <ul class="knowledge-base-list">
+      {% for kb in knowledge_bases %}
+      <li class="knowledge-base-item">
+        <p><strong>Title:</strong> {{ kb.title }}</p>
+        <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
+        <p><strong>File:</strong> <a href="{{ kb.file.url }}" download>Download</a></p>
+        <div class="buttons">
+          <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
+          {% if kb.is_embedded %}
+          <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test">Test Widget</a>
+          {% endif %}
         </div>
-        
-    </header>
+      </li>
+      {% empty %}
+      <li style="list-style: none;">No knowledge bases uploaded yet.</li>
+      {% endfor %}
+    </ul>
+  </main>
 
-    <main>
-        <h2>Your Uploaded Knowledge Bases</h2>
+  <footer>
+    &copy; {{ year }} Chatbot Platform. All rights reserved.
+  </footer>
 
-        <ul class="knowledge-base-list">
-            {% for kb in knowledge_bases %}
-            <li class="knowledge-base-item">
-                <p><strong>Title:</strong> {{ kb.title }}</p>
-                <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
-                <p><strong>File:</strong> <a href="{{ kb.file.url }}" download>Download</a></p>
-                <div class="buttons">
-                    <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
-                    
-                    {% if kb.is_embedded %}
-                        <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test">Test Widget</a>
-                    {% endif %}
-                </div>
-            </li>
-            {% empty %}
-            <li>No knowledge bases uploaded yet.</li>
-            {% endfor %}
-        </ul>
-    </main>
 </body>
 </html>

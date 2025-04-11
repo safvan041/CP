@@ -1,101 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proceed</title>
-    <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            background-color: #f9f9f9;
-            color: #333;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proceed | Chatbot Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
 
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-        }
+    header {
+      background-color: #1e293b;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-        header a {
-            color: white;
-            text-decoration: none;
-            font-size: 1rem;
-            margin-top: 0.5rem;
-            display: inline-block;
-        }
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
 
-        header a:hover {
-            text-decoration: underline;
-        }
+    .model-select {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
 
-        main {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .model-select select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+    }
 
-        main h2 {
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #007bff;
-        }
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      background-color: #475569;
+      padding: 8px 14px;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
 
-        p {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
+    .nav-link:hover {
+      background-color: #334155;
+    }
 
-        p strong {
-            color: #555;
-        }
+    main {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
 
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
+    main h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #2563eb;
+      margin-bottom: 24px;
+      text-align: center;
+    }
 
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    .info {
+      margin-bottom: 24px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .info p {
+      margin-bottom: 10px;
+    }
+
+    .info strong {
+      color: #475569;
+    }
+
+    .info a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .info a:hover {
+      text-decoration: underline;
+    }
+
+    .section-placeholder {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      text-align: center;
+      color: #64748b;
+      font-size: 15px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 14px;
+      color: #6b7280;
+      background-color: #f8fafc;
+      margin-top: auto;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .model-select {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="header-left">
-            <label for="model-select">Select Model:</label>
-            <select id="model-select">
-                <option value="llama">Llama</option>
-                <option value="openai">OpenAI GPT</option>
-                <option value="other">Other</option>
-            </select>
-        </div>
-        <h1>Proceed with Knowledge Base</h1>
-        <a href="{% url 'dashboard' %}">Back to Dashboard</a>
-    </header>
 
-    <main>
-        <h2>Knowledge Base Details</h2>
-        <p><strong>Title:</strong> {{ knowledge_base.title }}</p>
-        <p><strong>Uploaded On:</strong> {{ knowledge_base.created_at }}</p>
-        <p><strong>File:</strong> <a href="{{ knowledge_base.file.url }}" download>Download</a></p>
-        
-        <!-- Add your custom functionality here -->
-        <p>Further actions will be implemented here...</p>
-    </main>
+  <header>
+    <!-- <div class="model-select">
+      <label for="model-select">Select Model:</label>
+      <select id="model-select" name="model">
+        <option value="llama">LLaMA</option>
+        <option value="openai">OpenAI GPT</option>
+        <option value="mistral">Mistral</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div> -->
+    <h1>Proceed with Knowledge Base</h1>
+    <a href="{% url 'dashboard' %}" class="nav-link">← Back to Dashboard</a>
+  </header>
+
+  <main>
+    <h2>Knowledge Base Details</h2>
+    <div class="info">
+      <p><strong>Title:</strong> {{ knowledge_base.title }}</p>
+      <p><strong>Uploaded On:</strong> {{ knowledge_base.created_at }}</p>
+      <p><strong>File:</strong> <a href="{{ knowledge_base.file.url }}" download>Download</a></p>
+    </div>
+
+    <div class="section-placeholder">
+      🚧 Further actions related to model embedding, chatbot configuration, or testing will be implemented here...
+    </div>
+  </main>
+
+  <footer>
+    &copy; {{ year }} Chatbot Platform. All rights reserved.
+  </footer>
+
 </body>
 </html>

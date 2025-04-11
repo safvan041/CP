@@ -9,31 +9,36 @@ import faiss
 import pickle
 import numpy as np
 
-VECTOR_DIR = 'vectorstore'  # Folder for storing FAISS indexes
+# Set base directory to chatbot_platform/vectorstore
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_PATH = os.path.join(BASE_DIR, 'vectorstore')
 
-def embed_and_store(texts, index_name, model):
-    """Embeds and stores texts into a FAISS index along with raw text."""
-    if not os.path.exists(VECTOR_DIR):
-        os.makedirs(VECTOR_DIR)
+def embed_and_store(chunks, index_name, model):
+    os.makedirs(BASE_PATH, exist_ok=True)
+    index_path = os.path.join(BASE_PATH, index_name)
+    os.makedirs(index_path, exist_ok=True)
 
-    embeddings = model.encode(texts)
-    embeddings = np.array(embeddings).astype("float32")
+    # Step 1: Embed chunks
+    embeddings = model.encode(chunks)
 
+    # Step 2: Build FAISS index
     dim = embeddings.shape[1]
     index = faiss.IndexFlatL2(dim)
-    index.add(embeddings)
+    index.add(np.array(embeddings))
 
-    faiss.write_index(index, os.path.join(VECTOR_DIR, f"{index_name}.index"))
+    # Step 3: Save index
+    faiss.write_index(index, os.path.join(index_path, "index.faiss"))
 
-    with open(os.path.join(VECTOR_DIR, f"{index_name}.pkl"), 'wb') as f:
-        pickle.dump(texts, f)
+    # Step 4: Save chunks (to map back results later)
+    with open(os.path.join(index_path, "chunks.pkl"), "wb") as f:
+        pickle.dump(chunks, f)
 
-    return True
+    print(f"FAISS index and chunks stored at: {index_path}")
 
 def search_similar_chunks(query, index_name, model, top_k=1):
     """Search for top-k most similar chunks for a given query."""
-    index_path = os.path.join(VECTOR_DIR, f"{index_name}.index")
-    text_path = os.path.join(VECTOR_DIR, f"{index_name}.pkl")
+    index_path = os.path.join(BASE_PATH, index_name, "index.faiss")
+    text_path = os.path.join(BASE_PATH, index_name, "chunks.pkl")
 
     if not os.path.exists(index_path) or not os.path.exists(text_path):
         return ["Vector index or associated texts not found."]
@@ -46,4 +51,5 @@ def search_similar_chunks(query, index_name, model, top_k=1):
     D, I = index.search(query_vec, top_k)
 
     results = [texts[i] for i in I[0] if i < len(texts)]
+    print("results--------\n",results)
     return results
