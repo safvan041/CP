@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Proceed | Chatbot Platform</title>
+  <title>Proceed | CAPI Studio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     * {
@@ -14,7 +14,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f1f5f9;
+      background: linear-gradient(to right, #add8e6, #00008b);
       color: #1e293b;
       min-height: 100vh;
       display: flex;
@@ -22,8 +22,8 @@
     }
 
     header {
-      background-color: #1e293b;
-      color: white;
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
       padding: 16px 32px;
       display: flex;
       justify-content: space-between;
@@ -76,9 +76,9 @@
     }
 
     main h2 {
-      font-size: 24px;
+      font-size: 45px;
       font-weight: 600;
-      color: #2563eb;
+      color: #000000;
       margin-bottom: 24px;
       text-align: center;
     }
@@ -143,15 +143,7 @@
 <body>
 
   <header>
-    <!-- <div class="model-select">
-      <label for="model-select">Select Model:</label>
-      <select id="model-select" name="model">
-        <option value="llama">LLaMA</option>
-        <option value="openai">OpenAI GPT</option>
-        <option value="mistral">Mistral</option>
-        <option value="custom">Custom</option>
-      </select>
-    </div> -->
+    
     <h1>Proceed with Knowledge Base</h1>
     <a href="{% url 'dashboard' %}" class="nav-link">← Back to Dashboard</a>
   </header>
@@ -165,12 +157,12 @@
     </div>
 
     <div class="section-placeholder">
-      🚧 Further actions related to model embedding, chatbot configuration, or testing will be implemented here...
+      Your Uploaded File Has Been Stored In The DataBase And Test Widget Is Ready, Please Visit Dashboard To Test The Widget. 
     </div>
   </main>
 
   <footer>
-    &copy; {{ year }} Chatbot Platform. All rights reserved.
+    &copy; {{ year }} CAPI Studio. All rights reserved.
   </footer>
 
 </body>

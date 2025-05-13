@@ -7,13 +7,14 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background-color: #f3f4f6;
+            background: linear-gradient(to right, #add8e6, #00008b);
             color: #111827;
         }
         h2 {
             margin-bottom: 1rem;
         }
         #chat-box {
+            font-size: 20px;
             border: 1px solid #ccc;
             padding: 15px;
             height: 400px;
@@ -25,10 +26,10 @@
             margin-bottom: 12px;
         }
         .user-msg {
-            color: #2563eb;
+            color: solid black;
         }
         .bot-msg {
-            color: #10b981;
+            color: soild black;
         }
         .timestamp {
             font-size: 0.75rem;
@@ -50,14 +51,14 @@
         }
         button {
             padding: 10px 15px;
-            background-color: #2563eb;
-            color: white;
-            border: none;
+            background: white;
+            color: solid black;
+            border: white;
             border-radius: 5px;
             cursor: pointer;
         }
         button:hover {
-            background-color: #1e40af;
+            background: linear-gradient(to left, #add8e6, #00008b);
         }
         #typing-indicator {
             font-style: italic;
@@ -75,11 +76,10 @@
 <body>
     <h2>Chat with: {{ kb.title }}</h2>
     <div id="chat-box"></div>
-    <div id="typing-indicator" style="display: none;">Bot is typing...</div>
+    <div id="typing-indicator" style="display: none;">Bot is thinking...</div>
     <form id="chat-form">
         <input type="text" id="message" placeholder="Ask something..." autocomplete="off" required>
         <button type="submit">Send</button>
-        <button id="mic-button" title="Voice Input">🎤</button>
     </form>
 
     <script>
@@ -87,7 +87,7 @@
         const input = document.getElementById('message');
         const chatBox = document.getElementById('chat-box');
         const typingIndicator = document.getElementById('typing-indicator');
-        const micButton = document.getElementById('mic-button');
+        
 
         // Load chat history from sessionStorage
         window.addEventListener('load', () => {
@@ -126,31 +126,7 @@
             const data = await response.json();
             typingIndicator.style.display = 'none';
             appendMessage(`<div class="msg bot-msg"><strong>Bot:</strong> ${data.response}${getTimestamp()}</div>`);
-        });
-
-        // Voice input
-        if ('webkitSpeechRecognition' in window) {
-            const recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            micButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                recognition.start();
-            });
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                input.value = transcript;
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error", event);
-            };
-        } else {
-            micButton.style.display = 'none';
-        }
+        });        
     </script>
 </body>
 </html>

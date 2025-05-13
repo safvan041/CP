@@ -18,7 +18,8 @@ class KnowledgeBase(models.Model):
    
 
     is_embedded = models.BooleanField(default=False)
-    widget_slug = models.SlugField(unique=True, blank=True, null=True) 
+    widget_slug = models.SlugField(unique=True, blank=True, null=True)
+    embedded = models.BooleanField(default=False) 
 
     def __str__(self):
         return f"{self.title} ({self.user.username})"

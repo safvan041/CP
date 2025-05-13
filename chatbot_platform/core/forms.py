@@ -14,5 +14,5 @@ class KnowledgeBaseForm(forms.ModelForm):
             allowed_extensions = ['.txt', '.pdf', '.docx', '.doc']
             extension = file.name.split('.')[-1].lower()
             if f'.{extension}' not in allowed_extensions:
-                raise forms.ValidationError("Unsupported file format. Only .txt, .pdf, .docx files are allowed.")
+                raise forms.ValidationError("Unsupported file format. Only .txt, .pdf, .docx  files are allowed.")
         return file

@@ -51,5 +51,5 @@ def search_similar_chunks(query, index_name, model, top_k=1):
     D, I = index.search(query_vec, top_k)
 
     results = [texts[i] for i in I[0] if i < len(texts)]
-    print("results--------\n",results)
+    # print("results--------\n",results)
     return results

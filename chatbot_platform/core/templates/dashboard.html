@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | Chatbot Platform</title>
+  <title>Dashboard | CAPI Studio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     * {
@@ -14,7 +14,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #f1f5f9;
+      background: linear-gradient(to right, #add8e6, #00008b);
       color: #1e293b;
       min-height: 100vh;
       display: flex;
@@ -22,8 +22,8 @@
     }
 
     header {
-      background-color: #1e293b;
-      color: white;
+      background-color: #ffffff;
+      color: rgb(0, 0, 0);
       padding: 16px 32px;
       display: flex;
       justify-content: space-between;
@@ -59,14 +59,14 @@
     }
 
     h2 {
-      font-size: 28px;
+      font-size: 300%;
       font-weight: 600;
       margin-bottom: 24px;
+      color: #ffffff;
     }
 
     .knowledge-base-list {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
     }
 
@@ -85,13 +85,12 @@
 
     .knowledge-base-item p {
       margin-bottom: 8px;
-      font-size: 15px;
+      font-size: 25px;
     }
 
     .knowledge-base-item a {
-      text-decoration: none;
-      color: #010101;
-      font-weight: 500;
+      color: #ffffff;
+      font-weight: 700;
     }
 
     .buttons {
@@ -115,20 +114,20 @@
     }
 
     .btn-proceed {
-      background-color: #2563eb;
-    }
-
-    .btn-proceed:hover {
-      background-color: #1d4ed8;
+      background: linear-gradient(to left, #add8e6, #00008b);
     }
 
     .btn-test {
-      background-color: #16a34a;
-      color: black;
+      background: linear-gradient(to left, #add8e6, #00008b);
+      color: white;
     }
 
-    .btn-test:hover {
-      background-color: #15803d;
+    .btn-api {
+      background-color: #10b981;
+    }
+
+    .btn-api:hover {
+      background-color: #059669;
     }
 
     footer {
@@ -164,11 +163,11 @@
       <li class="knowledge-base-item">
         <p><strong>Title:</strong> {{ kb.title }}</p>
         <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
-        <p><strong>File:</strong> <a href="{{ kb.file.url }}" download>Download</a></p>
         <div class="buttons">
           <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
           {% if kb.is_embedded %}
-          <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test">Test Widget</a>
+          <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
+          <button class="btn btn-api" onclick="showEmbedModal('{{ kb.widget_slug }}')">Get Widget API</button>
           {% endif %}
         </div>
       </li>
@@ -178,9 +177,30 @@
     </ul>
   </main>
 
+  <div id="embedModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:8px; max-width:600px; width:90%; position:relative;">
+      <h3>Embed this Widget</h3>
+      <p>Copy the code below and paste it in your website's HTML:</p>
+      <textarea id="embedCode" style="width:100%; height:100px;"></textarea>
+      <button onclick="closeEmbedModal()" style="margin-top:10px; background:#ef4444; color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer;">Close</button>
+    </div>
+  </div>
+
   <footer>
-    &copy; {{ year }} Chatbot Platform. All rights reserved.
+    &copy; {{ year }} CAPI Studio. All rights reserved.
   </footer>
+
+  <script>
+    function showEmbedModal(slug) {
+      const iframeCode = `&lt;iframe src="https://127.0.0.1:8000//chat/${slug}/" width="350" height="500" style="border:none;position:fixed;bottom:20px;right:20px;z-index:9999;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>`;
+      document.getElementById('embedCode').innerHTML = iframeCode;
+      document.getElementById('embedModal').style.display = 'flex';
+    }
+
+    function closeEmbedModal() {
+      document.getElementById('embedModal').style.display = 'none';
+    }
+  </script>
 
 </body>
 </html>
