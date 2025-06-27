@@ -1,5 +1,5 @@
 from django import forms
-from .models import KnowledgeBase
+from core.models import KnowledgeBase
 
 class KnowledgeBaseForm(forms.ModelForm):
     class Meta:
