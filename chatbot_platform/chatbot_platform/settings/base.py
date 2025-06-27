@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-v_+-vt%%vlrmba%2rcf&9asom8s0b-r^s2)o^^&+3%@uz(7)tg")
+SECRET_KEY = config("SECRET_KEY")
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if not DEBUG else []
@@ -78,4 +79,4 @@ LOGIN_URL = '/login/'
 X_FRAME_OPTIONS = 'ALLOWALL'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GOOGLE_GENAI_API_KEY = os.getenv("GOOGLE_GENAI_API_KEY", "AIzaSyAadH-ciHk8CfTULfCWoNQKcqQ8h7T9K3M")
+GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY")
