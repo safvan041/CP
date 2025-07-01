@@ -1,11 +1,11 @@
 steps:
   # Step 1: Build the Docker image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/chatbot-api-platform', '.']
+   - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform', '.']
 
-  # Step 2: Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/chatbot-api-platform']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform']
+
 
   # Step 3: Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +15,7 @@ steps:
       - deploy
       - chatbot-api-platform
       - --image
-      - gcr.io/$PROJECT_ID/chatbot-api-platform
+      - us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform
       - --region
       - us-central1
       - --platform
