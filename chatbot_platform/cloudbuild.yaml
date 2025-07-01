@@ -1,0 +1,33 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/chatbot-api-platform', '.']
+
+  # Step 2: Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/chatbot-api-platform']
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - chatbot-api-platform
+      - --image
+      - gcr.io/$PROJECT_ID/chatbot-api-platform
+      - --region
+      - us-central1
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - "8000"
+      - --memory
+      - "1Gi"
+    env:
+      - 'DJANGO_SETTINGS_MODULE=chatbot_platform.settings.base'  # if using modular settings
+      - 'PYTHONUNBUFFERED=1'
+      - 'DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app'
+
+timeout: "900s"
