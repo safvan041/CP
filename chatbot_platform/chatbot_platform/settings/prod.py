@@ -1,4 +1,8 @@
 from .base import *
 
 DEBUG = False
-ALLOWED_HOSTS = ["yourdomain.com", "www.yourdomain.com"]
+ALLOWED_HOSTS = [
+    'chatbot-api-platform-29773676777.us-central1.run.app',
+    'localhost',
+    '127.0.0.1',
+]
