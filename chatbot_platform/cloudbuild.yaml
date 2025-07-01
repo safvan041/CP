@@ -1,6 +1,6 @@
 steps:
   # Step 1: Build the Docker image
-   - name: 'gcr.io/cloud-builders/docker'
+  - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform', '.']
 
   - name: 'gcr.io/cloud-builders/docker'
