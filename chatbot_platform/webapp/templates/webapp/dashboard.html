@@ -192,7 +192,7 @@
 
   <script>
     function showEmbedModal(slug) {
-      const iframeCode = `&lt;iframe src="https://127.0.0.1:8000//chat/${slug}/" width="350" height="500" style="border:none;position:fixed;bottom:20px;right:20px;z-index:9999;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>`;
+      const iframeCode = <iframe src="https://chatbot-api-platform-29773676777.us-central1.run.app/chat/${slug}/" width="350" height="500" style="border:none;position:fixed;bottom:20px;right:20px;z-index:9999;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>;
       document.getElementById('embedCode').innerHTML = iframeCode;
       document.getElementById('embedModal').style.display = 'flex';
     }
