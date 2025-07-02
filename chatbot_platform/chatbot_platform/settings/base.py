@@ -50,12 +50,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chatbot_platform.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+USE_CLOUD_DB = config("USE_CLOUD_DB", default=False, cast=bool)
+
+if USE_CLOUD_DB:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': '/cloudsql/' + config('INSTANCE_CONNECTION_NAME'),
+            'PORT': '5432',
+        }
     }
-}
+else:
+    # Default SQLite for local dev
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

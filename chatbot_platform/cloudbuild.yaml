@@ -21,11 +21,17 @@ steps:
       - '--allow-unauthenticated'
       - '--port'
       - '8000'
-      - '--set-env-vars'
+      - --set-env-vars
       - |
+        USE_CLOUD_DB=True,
+        DB_NAME=chatbot_db,
+        DB_USER=dbuser,
+        DB_PASSWORD=dbpass123,
+        INSTANCE_CONNECTION_NAME=melodic-rig-459011-f6:us-central1:chatbot-db,
         DJANGO_SETTINGS_MODULE=chatbot_platform.settings.prod,
+        DJANGO_DEBUG=False,
         DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app,
         SECRET_KEY=django-insecure-v_+-vt%%vlrmba%2rcf&9asom8s0b-r^s2)o^^&+3%@uz(7)tg,
         GOOGLE_GENAI_API_KEY=AIzaSyAadH-ciHk8CfTULfCWoNQKcqQ8h7T9K3M
 
-timeout: '1200s'
+timeout: '2400s'
