@@ -1,13 +1,20 @@
 steps:
-  # Step 1: Build the Docker image
+  # Build Docker Image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform', '.']
+    args: [
+      'build', '-t',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform',
+      '.'
+    ]
 
+  # Push Docker Image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform']
+    args: [
+      'push',
+      'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform'
+    ]
 
-
-  # Step 3: Deploy to Cloud Run
+  # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -23,11 +30,11 @@ steps:
       - --allow-unauthenticated
       - --port
       - "8000"
-      - --memory
-      - "1Gi"
-    env:
-      - 'DJANGO_SETTINGS_MODULE=chatbot_platform.settings.base'  # if using modular settings
-      - 'PYTHONUNBUFFERED=1'
-      - 'DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app'
+      - --set-env-vars
+      - DJANGO_SETTINGS_MODULE=chatbot_platform.settings.prod,
+        DJANGO_DEBUG=False,
+        DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app,
+        SECRET_KEY=django-insecure-v_+-vt%%vlrmba%2rcf&9asom8s0b-r^s2)o^^&+3%@uz(7)tg,
+        GOOGLE_GENAI_API_KEY=AIzaSyAadH-ciHk8CfTULfCWoNQKcqQ8h7T9K3M
 
-timeout: "900s"
+timeout: 1800s  # Extended to 30 minutes
