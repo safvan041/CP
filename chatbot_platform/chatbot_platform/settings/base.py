@@ -4,10 +4,10 @@ from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = config("SECRET_KEY")
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
+DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if not DEBUG else []
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",") if not DEBUG else []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,7 +71,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# STATICFILES_DIRS = [BASE_DIR / "core/static"]
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

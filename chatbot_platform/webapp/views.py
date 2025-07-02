@@ -59,6 +59,7 @@ def logout_view(request):
 
 
 @login_required
+
 def dashboard_view(request):
     knowledge_bases = KnowledgeBase.objects.filter(user=request.user).order_by('-created_at')
     return render(request, "webapp/dashboard.html", {"knowledge_bases": knowledge_bases})
