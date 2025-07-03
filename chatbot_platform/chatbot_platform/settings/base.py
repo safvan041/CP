@@ -50,7 +50,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chatbot_platform.wsgi.application'
 
-USE_CLOUD_DB = config("USE_CLOUD_DB", default=False, cast=bool)
+USE_CLOUD_DB = config("USE_CLOUD_DB", default="False").lower() == "true"
 
 if USE_CLOUD_DB:
     DATABASES = {
@@ -59,12 +59,11 @@ if USE_CLOUD_DB:
             'NAME': config('DB_NAME'),
             'USER': config('DB_USER'),
             'PASSWORD': config('DB_PASSWORD'),
-            'HOST': '/cloudsql/' + config('INSTANCE_CONNECTION_NAME'),
-            'PORT': '5432',
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', default='5432'),
         }
     }
 else:
-    # Default SQLite for local dev
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
