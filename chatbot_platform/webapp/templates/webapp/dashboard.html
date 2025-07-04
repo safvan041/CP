@@ -181,8 +181,9 @@
     <div style="background:white; padding:20px; border-radius:8px; max-width:600px; width:90%; position:relative;">
       <h3>Embed this Widget</h3>
       <p>Copy the code below and paste it in your website's HTML:</p>
-      <textarea id="embedCode" style="width:100%; height:100px;"></textarea>
-      <button onclick="closeEmbedModal()" style="margin-top:10px; background:#ef4444; color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer;">Close</button>
+      <!-- Use textarea correctly -->
+      <textarea id="embedCode" readonly style="width:100%; height:100px; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px; font-family: monospace;"></textarea>
+      <button onclick="closeEmbedModal()" style="margin-top:10px; background:#ef4444; color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; transition: background-color 0.2s ease;">Close</button>
     </div>
   </div>
 
@@ -191,15 +192,26 @@
   </footer>
 
   <script>
+
+    // Function to show the modal and populate the textarea dengan iframe code
     function showEmbedModal(slug) {
-      const iframeCode = <iframe src="https://chatbot-api-platform-29773676777.us-central1.run.app/chat/${slug}/" width="350" height="500" style="border:none;position:fixed;bottom:20px;right:20px;z-index:9999;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>;
-      document.getElementById('embedCode').innerHTML = iframeCode;
+      const actualSlug = String(slug || '');
+      // Construct the full iframe code as a STRING
+      const iframeCodeString = `<iframe src="https://chatbot-api-platform-29773676777.us-central1.run.app/chat/${actualSlug}/" width="100%" height="500px" frameborder="0" style="border:none; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>`;
+      // Set the value of the textarea
+      document.getElementById('embedCode').value = iframeCodeString;
+
+      // Display the modal
       document.getElementById('embedModal').style.display = 'flex';
     }
 
+    // Function to close the modal
     function closeEmbedModal() {
       document.getElementById('embedModal').style.display = 'none';
+      // Optional: Clear the textarea when closing
+      document.getElementById('embedCode').value = '';
     }
+
   </script>
 
 </body>
