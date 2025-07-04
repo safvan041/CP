@@ -74,9 +74,23 @@ def home_view(request):
         if form.is_valid():
             knowledge_base = form.save(commit=False)
             knowledge_base.user = request.user
-            knowledge_base.save()
-            messages.success(request, "Knowledge base uploaded successfully!")
-            return redirect("dashboard")
+            try:
+                knowledge_base.save() # This is where the GCS upload happens
+                # After save(), check the file's path and URL
+                print(f"DEBUG: File saved. KB ID: {knowledge_base.id}")
+                print(f"DEBUG: knowledge_base.file.name: {knowledge_base.file.name}")
+                print(f"DEBUG: knowledge_base.file.url: {knowledge_base.file.url}") # This should now be a GCS URL
+                print(f"DEBUG: kb.file.path (will trigger GCS access): {knowledge_base.file.path}")
+
+
+                messages.success(request, "Knowledge base uploaded successfully!")
+                return redirect("dashboard")
+            except Exception as e:
+                print(f"ERROR: Failed to save knowledge base (likely GCS issue): {e}")
+                messages.error(request, f"Failed to upload file to storage: {e}")
+                # If you want to delete the KB record if file upload fails:
+                # knowledge_base.delete()
+                return redirect("dashboard") # Or return to upload page with error
         else:
             messages.error(request, "There was an error with your upload.")
     else:
@@ -86,26 +100,35 @@ def home_view(request):
 
 @login_required
 def proceed_view(request, kb_id):
-    kb = get_object_or_404(KnowledgeBase, pk=kb_id)
+    kb = get_object_or_404(KnowledgeBase, pk=kb_id, user=request.user) # Added user filter for security
 
     if not kb.is_embedded:
-        file_path = kb.file.path
-        extracted_text = extract_text_from_file(file_path)
-        model = get_embedding_model()
-        vector_index_name = f"kb_{kb.id}"
+        # Pass the FileField object (kb.file) directly to the extraction function
+        extracted_text = extract_text_from_file(kb.file) # <--- CRITICAL CHANGE
 
-        if not extracted_text.strip():
-            messages.error(request, "The uploaded file has no readable text.")
+        # Check if the extracted_text indicates an error during processing
+        if extracted_text.startswith("Error:"):
+            messages.error(request, extracted_text) # Display the specific error message
             return redirect("dashboard")
 
+        if not extracted_text.strip():
+            messages.error(request, "The uploaded file has no readable text or is empty.")
+            return redirect("dashboard")
+
+        model = get_embedding_model() # Ensure this is correctly defined and returns your Gemini model
+        vector_index_name = f"kb_{kb.id}"
+
+        # Assuming embed_and_store handles the entire process and doesn't need file paths anymore
         embed_and_store([extracted_text], vector_index_name, model)
 
-        kb.widget_slug = str(uuid.uuid4())[:8]
+        kb.widget_slug = str(uuid.uuid4())[:8] # Generates a unique 8-char slug
         kb.is_embedded = True
         kb.save()
+        messages.success(request, "Knowledge base embedded successfully!") # Add success message
+    else:
+        messages.info(request, "Knowledge base is already embedded.")
 
     return render(request, 'webapp/proceed.html', {'knowledge_base': kb})
-
 
 def chat_widget_view(request, widget_slug):
     kb = get_object_or_404(KnowledgeBase, widget_slug=widget_slug)

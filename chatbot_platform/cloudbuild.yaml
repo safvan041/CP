@@ -1,4 +1,4 @@
-
+## Cloud Build configuration file for deploying the Django Chatbot Platform to Google Cloud Run
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform', '.']
@@ -34,5 +34,6 @@ steps:
         DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app,
         SECRET_KEY=django-insecure-v_+-vt%%vlrmba%2rcf&9asom8s0b-r^s2)o^^&+3%@uz(7)tg,
         GOOGLE_GENAI_API_KEY=AIzaSyAadH-ciHk8CfTULfCWoNQKcqQ8h7T9K3M
+        GCS_PROJECT_ID=melodic-rig-459011-f6
 
 timeout: '2400s'

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from storages.backends.gcloud import GoogleCloudStorage
 
 
 class UserProfile(models.Model):
@@ -13,7 +14,7 @@ class UserProfile(models.Model):
 class KnowledgeBase(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    file = models.FileField(upload_to="knowledge_bases/")
+    file = models.FileField(upload_to="knowledge_bases/", storage=GoogleCloudStorage())  # Use default storage
     created_at = models.DateTimeField(auto_now_add=True)
    
 

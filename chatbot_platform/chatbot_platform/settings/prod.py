@@ -9,6 +9,8 @@ ALLOWED_HOSTS = [
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
+GCS_BUCKET_NAME=os.environ.get("GCS_BUCKET_NAME", "chatbot-api-platform")
+
 CSRF_TRUSTED_ORIGINS = [
     'https://chatbot-api-platform-29773676777.us-central1.run.app',
 ]

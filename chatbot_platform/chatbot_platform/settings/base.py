@@ -1,3 +1,4 @@
+#settings/base.py
 import os
 from pathlib import Path
 from decouple import config
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'webapp',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +51,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'chatbot_platform.wsgi.application'
+
+GS_BUCKET_NAME = config("GS_BUCKET_NAME", default="chatbot-api-platform")
+
+GS_PROJECT_ID = config("GS_PROJECT_ID", default="None")
+
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_DEFAULT_ACL = 'publicRead'
 
 USE_CLOUD_DB = config("USE_CLOUD_DB", default="False").lower() == "true"
 
@@ -87,8 +96,8 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/login/'
 X_FRAME_OPTIONS = 'ALLOWALL'
