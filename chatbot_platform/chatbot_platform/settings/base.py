@@ -2,9 +2,20 @@
 import os
 from pathlib import Path
 from decouple import config
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY").strip()
+HF_TOKEN = config("HF_TOKEN").strip()
 SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
@@ -59,9 +70,16 @@ GS_PROJECT_ID = config("GS_PROJECT_ID", default="None")
 DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 GS_DEFAULT_ACL = 'publicRead'
 
+logger.info(f"DEBUG: OS environment DB_USER: {os.environ.get('DB_USER')}")
+logger.info(f"DEBUG: Config DB_USER: {config('DB_USER')}")
+logger.info(f"DEBUG: OS environment DB_PASSWORD: {os.environ.get('DB_PASSWORD')}")
+logger.info(f"DEBUG: Config DB_PASSWORD: {config('DB_PASSWORD')}")
+
 USE_CLOUD_DB = config("USE_CLOUD_DB", default="False").lower() == "true"
+logger.info(f"DEBUG: USE_CLOUD_DB resolved to: {USE_CLOUD_DB}")
 
 if USE_CLOUD_DB:
+    logger.info(f"DEBUG: Using cloud database configuration")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -73,6 +91,7 @@ if USE_CLOUD_DB:
         }
     }
 else:
+    logger.info(f"DEBUG: Using local SQLite database configuration")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
