@@ -3,6 +3,7 @@
 import os
 import json
 import uuid
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
@@ -19,7 +20,7 @@ from core.utils.vector.vector_logic import embed_and_store, search_similar_chunk
 from .utils.genai_llm import generate_genai_response
 from core.utils.embeddings.embedding_service import get_embedding_model
 
-
+logger = logging.getLogger(__name__)
 
 def signup_view(request):
     if request.method == "POST":
@@ -48,6 +49,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            messages.success(request, "Logged in successfully!")
             return redirect("dashboard")
         else:
             messages.error(request, "Invalid credentials")
@@ -56,6 +58,7 @@ def login_view(request):
 
 
 def logout_view(request):
+    messages.success(request, "Logged out successfully!")
     logout(request)
     return redirect("login")
 
@@ -77,22 +80,30 @@ def home_view(request):
             try:
                 knowledge_base.save() # This is where the GCS upload happens
                 # After save(), check the file's path and URL
-                print(f"DEBUG: File saved. KB ID: {knowledge_base.id}")
-                print(f"DEBUG: knowledge_base.file.name: {knowledge_base.file.name}")
-                print(f"DEBUG: knowledge_base.file.url: {knowledge_base.file.url}") # This should now be a GCS URL
-                print(f"DEBUG: kb.file.path (will trigger GCS access): {knowledge_base.file.path}")
+                # print(f"DEBUG: File saved. KB ID: {knowledge_base.id}")
+                # print(f"DEBUG: knowledge_base.file.name: {knowledge_base.file.name}")
+                # print(f"DEBUG: knowledge_base.file.url: {knowledge_base.file.url}") # This should now be a GCS URL
+                # print(f"DEBUG: kb.file.path (will trigger GCS access): {knowledge_base.file.path}")
 
 
                 messages.success(request, "Knowledge base uploaded successfully!")
                 return redirect("dashboard")
+            except ValueError as ve:
+                logger.error("caught ValueError during file upload", exc_info=True)
+                messages.error(request, f"Failed to save knowledge base: {ve}")
+                return redirect("home")
+            except notImplementedError as e:
+                logger.error("caught NotImplementedError during file upload", exc_info=True)
+                messages.error(request, "File upload failed to storage: {e} ")
             except Exception as e:
-                print(f"ERROR: Failed to save knowledge base (likely GCS issue): {e}")
+                logger.error("caught unexpected exception during file upload: {type(e).__name__}", exc_info=True)
                 messages.error(request, f"Failed to upload file to storage: {e}")
-                # If you want to delete the KB record if file upload fails:
-                # knowledge_base.delete()
                 return redirect("dashboard") # Or return to upload page with error
         else:
-            messages.error(request, "There was an error with your upload.")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error in {field}: {error}")
+            messages.error(request, "There were errors in your form. Please correct them and try again.")
     else:
         form = KnowledgeBaseForm()
     return render(request, "webapp/home.html", {"form": form})
@@ -112,19 +123,22 @@ def proceed_view(request, kb_id):
             return redirect("dashboard")
 
         if not extracted_text.strip():
-            messages.error(request, "The uploaded file has no readable text or is empty.")
+            messages.warning(request, "The uploaded file has no readable text or is empty.")
             return redirect("dashboard")
+        try:
+            model = get_embedding_model() # Ensure this is correctly defined and returns your Gemini model
+            vector_index_name = f"kb_{kb.id}"
 
-        model = get_embedding_model() # Ensure this is correctly defined and returns your Gemini model
-        vector_index_name = f"kb_{kb.id}"
+            # Assuming embed_and_store handles the entire process and doesn't need file paths anymore
+            embed_and_store([extracted_text], vector_index_name, model)
 
-        # Assuming embed_and_store handles the entire process and doesn't need file paths anymore
-        embed_and_store([extracted_text], vector_index_name, model)
-
-        kb.widget_slug = str(uuid.uuid4())[:8] # Generates a unique 8-char slug
-        kb.is_embedded = True
-        kb.save()
-        messages.success(request, "Knowledge base embedded successfully!") # Add success message
+            kb.widget_slug = str(uuid.uuid4())[:8] # Generates a unique 8-char slug
+            kb.is_embedded = True
+            kb.save()
+            messages.success(request, "Knowledge base embedded successfully!") # Add success message
+        except Exception as e:
+            messages.error(request, f"Failed to embed knowledge base: {e}")
+            return redirect("dashboard")
     else:
         messages.info(request, "Knowledge base is already embedded.")
 

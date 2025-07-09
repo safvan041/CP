@@ -1,7 +1,22 @@
 .qodo
 .env
+<<<<<<< HEAD
 
 env/
 .venv/
 .test/
 __pycache__/
+=======
+.venv/
+env/
+test1/
+
+.idea/
+.vscode/
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg
+*.egg-info/
+>>>>>>> feature/message
