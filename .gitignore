@@ -1,25 +1,16 @@
-.qodo
-.env
-<<<<<<< HEAD
-
+# Python env folders
 env/
 .venv/
 test1/
-__pycache__/
-=======
-.venv/
-env/
-test1/
 
-.idea/
-.vscode/
-.DS_Store
-
-__pycache__/
+# Cache & compiled
+_pycache_/
 *.py[cod]
-*.pyo
-*.egg
+
+# IDE
+.vscode/
+.idea/
+
+# Others
 *.egg-info/
-
-
->>>>>>> feature/message
+.env
