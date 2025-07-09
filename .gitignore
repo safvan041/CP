@@ -4,7 +4,7 @@
 
 env/
 .venv/
-.test/
+test1/
 __pycache__/
 =======
 .venv/
@@ -13,10 +13,13 @@ test1/
 
 .idea/
 .vscode/
+.DS_Store
 
 __pycache__/
 *.py[cod]
 *.pyo
 *.egg
 *.egg-info/
+
+
 >>>>>>> feature/message
