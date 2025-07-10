@@ -1,0 +1,11 @@
+﻿venv/
+_pycache_/
+*.pyc
+*.pyd
+*.dll
+*.lib
+*.so
+*.egg-info/
+.env
+env/
+test1/

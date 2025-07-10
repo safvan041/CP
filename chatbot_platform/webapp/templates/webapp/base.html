@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    
+    <!-- Page Title -->
+    <title>{% block title %}CAPI Studio{% endblock title %}</title>
+
+    <!-- Fonts and Base Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <!-- Link to a future global stylesheet if you create one -->
+    <!-- <link rel="stylesheet" href="{% static 'css/base.css' %}"> -->
+    
+    <!-- Block for any extra CSS files needed by child templates -->
+    {% block extra_head %}{% endblock extra_head %}
+</head>
+<body class="{% block body_class %}{% endblock body_class %}">
+
+    {% block content %}{% endblock content %}
+
+    <!-- Link to a future global JS file if you create one -->
+    <!-- <script src="{% static 'js/base.js' %}"></script> -->
+    
+    <!-- Block for any extra JS files needed by child templates -->
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

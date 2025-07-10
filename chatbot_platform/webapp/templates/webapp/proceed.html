@@ -1,0 +1,54 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block title %}Proceed | {{ block.super }}{% endblock title %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/proceed.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+    <header>
+        <h1>Proceed with Knowledge Base</h1>
+        <a href="{% url 'dashboard' %}" class="nav-link">← Back to Dashboard</a>
+    </header>
+
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <main>
+        <h2>Knowledge Base Details</h2>
+
+        <div class="info-card">
+            <div class="info-item">
+                <strong>Title:</strong>
+                <span>{{ knowledge_base.title }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Uploaded On:</strong>
+                <span>{{ knowledge_base.created_at|date:"F j, Y, P" }}</span>
+            </div>
+            <div class="info-item">
+                <strong>File:</strong>
+                <span><a href="{{ knowledge_base.file.url }}" download>Download</a></span>
+            </div>
+        </div>
+
+        <div class="status-box">
+            <p>Your uploaded file has been processed and your chatbot widget is ready.</p>
+            <p>Please visit the dashboard to test the widget.</p>
+        </div>
+    </main>
+
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}

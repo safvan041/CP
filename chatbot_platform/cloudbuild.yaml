@@ -1,0 +1,39 @@
+## Cloud Build configuration file for deploying the Django Chatbot Platform to Google Cloud Run
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'chatbot-api-platform'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/chatbot-api-platform/chatbot-api-platform'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8000'
+      - --set-env-vars
+      - |
+        USE_CLOUD_DB=False,
+        DB_NAME=chatbot_db,
+        DB_USER=postgres,
+        DB_PASSWORD=secret:prod-db-password,
+        DB_HOST=34.10.74.101,
+        DB_PORT=5432,
+        DJANGO_SETTINGS_MODULE=chatbot_platform.settings.prod,
+        DJANGO_DEBUG=False,
+        DJANGO_ALLOWED_HOSTS=chatbot-api-platform-29773676777.us-central1.run.app,
+        SECRET_KEY=secret:prod-django-secret-key,
+        GOOGLE_GENAI_API_KEY=secret:prod-google-genai-api-key,
+        GCS_PROJECT_ID=melodic-rig-459011-f6
+
+timeout: '2400s'

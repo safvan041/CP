@@ -1,0 +1,66 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block title %}Upload Knowledge Base | {{ block.super }}{% endblock title %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+    <header>
+        <div class="logo">🤖 CAPI Studio</div>
+        <nav>
+            <span>Welcome, {{ request.user.username }}</span>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </nav>
+    </header>
+
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Upload Knowledge Base</h1>
+            <p>Enhance your chatbot by feeding it your content</p>
+        </div>
+
+        <div class="upload-card">
+            <h2>Upload a File</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Render form fields manually for better styling control -->
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="help-text">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}

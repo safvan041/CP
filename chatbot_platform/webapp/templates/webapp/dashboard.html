@@ -1,0 +1,74 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | {{ block.super }}{% endblock title %}
+
+{% block extra_head %}
+    <!-- Link to the CSS file specifically for the dashboard -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+    <header>
+        <h1>Dashboard</h1>
+        <div class="header-right">
+            <a href="{% url 'upload' %}" class="btn btn-secondary">Upload</a>
+            <a href="{% url 'logout' %}" class="btn btn-logout">Logout</a>
+        </div>
+    </header>
+
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <main>
+        <h2>Your Uploaded Knowledge Bases</h2>
+        <ul class="knowledge-base-list">
+            {% for kb in knowledge_bases %}
+            <li class="knowledge-base-item">
+                <p><strong>Title:</strong> {{ kb.title }}</p>
+                <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
+                <div class="buttons">
+                    <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
+                    {% if kb.is_embedded %}
+                        <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
+                        <button class="btn btn-api" onclick="showEmbedModal('{{ kb.widget_slug }}')">Get Widget API</button>
+                    {% endif %}
+                    <form action="{% url 'delete_kb' kb.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this KB?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% empty %}
+            <li class="no-kbs-message">No knowledge bases uploaded yet.</li>
+            {% endfor %}
+        </ul>
+    </main>
+
+    <!-- The embed modal is part of the dashboard's content -->
+    <div id="embedModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Embed this Widget</h3>
+            <p>Copy the code below and paste it in your website's HTML:</p>
+            <textarea id="embedCode" readonly></textarea>
+            <button onclick="closeEmbedModal()" class="btn btn-close">Close</button>
+        </div>
+    </div>
+
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}
+
+{% block extra_js %}
+    <!-- Link to the JavaScript file specifically for the dashboard -->
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock extra_js %}

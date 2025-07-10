@@ -1,0 +1,35 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block title %}Chat with {{ kb.title }}{% endblock title %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/chat_widget.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+    <!--
+      We add the Django-generated URLs and slugs as data attributes.
+      Our JavaScript will read these attributes to know which API to call.
+    -->
+    <div id="chat-container"
+          data-api-url="{% url 'chat_api' kb.widget_slug %}"
+          data-csrf-token="{{ csrf_token }}">
+          
+        <div class="chat-header">
+          <h2>Chat with: {{ kb.title }}</h2>
+        </div>
+
+        <div id="chat-box"></div>
+        <div id="typing-indicator" style="display: none;">Bot is thinking...</div>
+        
+        <form id="chat-form">
+          <input type="text" id="message-input" placeholder="Ask something..." autocomplete="off" required>
+          <button type="submit">Send</button>
+        </form>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="{% static 'js/chat_widget.js' %}"></script>
+{% endblock extra_js %}
