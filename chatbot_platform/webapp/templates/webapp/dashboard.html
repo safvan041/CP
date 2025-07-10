@@ -1,264 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard | CAPI Studio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+{% extends 'webapp/base.html' %}
+{% load static %}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #add8e6, #00008b);
-      color: #1e293b;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+{% block title %}Dashboard | {{ block.super }}{% endblock title %}
 
-    header {
-      background-color: #ffffff;
-      color: rgb(0, 0, 0);
-      padding: 16px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    }
+{% block extra_head %}
+    <!-- Link to the CSS file specifically for the dashboard -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock extra_head %}
 
-    header h1 {
-      font-size: 24px;
-      font-weight: 700;
-    }
-
-    .header-right a {
-      margin-left: 16px;
-      padding: 10px 14px;
-      background-color: #475569;
-      color: white;
-      border-radius: 6px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background-color 0.2s ease;
-    }
-
-    .header-right a:hover {
-      background-color: #334155;
-    }
-
-    main {
-      padding: 40px 20px;
-      max-width: 1000px;
-      margin: 0 auto;
-      flex: 1;
-    }
-
-    h2 {
-      font-size: 300%;
-      font-weight: 600;
-      margin-bottom: 24px;
-      color: #ffffff;
-    }
-    .message {
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      /* Define a default style for all messages */
-      background-color: #f0f0f0; /* Soft gray default */
-      color: #333;
-      border: 1px solid #ccc;
-    }
-
-    .message.success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .message.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
-    .message.info {
-      background-color: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-
-    .message.warning {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
-    }
-
-    .knowledge-base-list {
-      display: grid;
-      gap: 20px;
-    }
-
-    .knowledge-base-item {
-      background-color: white;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .knowledge-base-item:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    }
-
-    .knowledge-base-item p {
-      margin-bottom: 8px;
-      font-size: 25px;
-    }
-
-    .knowledge-base-item a {
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .buttons {
-      margin-top: 16px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      color: black;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      font-size: 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      color: white;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-
-    .btn-proceed {
-      background: linear-gradient(to left, #add8e6, #00008b);
-    }
-
-    .btn-test {
-      background: linear-gradient(to left, #add8e6, #00008b);
-      color: white;
-    }
-
-    .btn-api {
-      background-color: #10b981;
-    }
-
-    .btn-api:hover {
-      background-color: #059669;
-    }
-
-    footer {
-      text-align: center;
-      padding: 16px;
-      font-size: 14px;
-      color: #6b7280;
-      background-color: #f8fafc;
-    }
-
-    @media (max-width: 500px) {
-      .header-right a {
-        padding: 8px 12px;
-        margin-left: 8px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>Dashboard</h1>
-    <div class="header-right">
-      <a href="{% url 'upload' %}" class="btn btn-secondary">Back</a>
-      <a href="{% url 'logout' %}" class="btn btn-logout">Logout</a>
-    </div>
-  </header>
-  <!-- Message Display Area -->
-  <div style="max-width: 1000px; margin: 20px auto; padding: 0 20px;">
-      {% if messages %}
-          <ul class="messages" style="list-style: none; padding: 0;">
-              {% for message in messages %}
-              <li{% if message.tags %} class="message {{ message.tags }}"{% else %} class="message"{% endif %}>
-                  {{ message }}
-              </li>
-              {% empty %}
-              {% endfor %}
-          </ul>
-      {% endif %}
-  </div>
-
-  <main>
-    <h2>Your Uploaded Knowledge Bases</h2>
-    <ul class="knowledge-base-list">
-      {% for kb in knowledge_bases %}
-      <li class="knowledge-base-item">
-        <p><strong>Title:</strong> {{ kb.title }}</p>
-        <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
-        <div class="buttons">
-          <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
-          {% if kb.is_embedded %}
-          <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
-          <button class="btn btn-api" onclick="showEmbedModal('{{ kb.widget_slug }}')">Get Widget API</button>
-          {% endif %}
+{% block content %}
+    <header>
+        <h1>Dashboard</h1>
+        <div class="header-right">
+            <a href="{% url 'upload' %}" class="btn btn-secondary">Upload</a>
+            <a href="{% url 'logout' %}" class="btn btn-logout">Logout</a>
         </div>
-      </li>
-      {% empty %}
-      <li style="list-style: none;">No knowledge bases uploaded yet.</li>
-      {% endfor %}
-    </ul>
-  </main>
+    </header>
 
-  <div id="embedModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:white; padding:20px; border-radius:8px; max-width:600px; width:90%; position:relative;">
-      <h3>Embed this Widget</h3>
-      <p>Copy the code below and paste it in your website's HTML:</p>
-      <!-- Use textarea correctly -->
-      <textarea id="embedCode" readonly style="width:100%; height:100px; margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; padding:8px; font-family: monospace;"></textarea>
-      <button onclick="closeEmbedModal()" style="margin-top:10px; background:#ef4444; color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; transition: background-color 0.2s ease;">Close</button>
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
-  </div>
 
-  <footer>
-    &copy; {{ year }} CAPI Studio. All rights reserved.
-  </footer>
+    <main>
+        <h2>Your Uploaded Knowledge Bases</h2>
+        <ul class="knowledge-base-list">
+            {% for kb in knowledge_bases %}
+            <li class="knowledge-base-item">
+                <p><strong>Title:</strong> {{ kb.title }}</p>
+                <p><strong>Uploaded On:</strong> {{ kb.created_at }}</p>
+                <div class="buttons">
+                    <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed</a>
+                    {% if kb.is_embedded %}
+                        <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
+                        <button class="btn btn-api" onclick="showEmbedModal('{{ kb.widget_slug }}')">Get Widget API</button>
+                    {% endif %}
+                </div>
+            </li>
+            {% empty %}
+            <li class="no-kbs-message">No knowledge bases uploaded yet.</li>
+            {% endfor %}
+        </ul>
+    </main>
 
-  <script>
+    <!-- The embed modal is part of the dashboard's content -->
+    <div id="embedModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Embed this Widget</h3>
+            <p>Copy the code below and paste it in your website's HTML:</p>
+            <textarea id="embedCode" readonly></textarea>
+            <button onclick="closeEmbedModal()" class="btn btn-close">Close</button>
+        </div>
+    </div>
 
-    // Function to show the modal and populate the textarea dengan iframe code
-    function showEmbedModal(slug) {
-      const actualSlug = String(slug || '');
-      // Construct the full iframe code as a STRING
-      const iframeCodeString = `<iframe src="https://chatbot-api-platform-29773676777.us-central1.run.app/chat/${actualSlug}/" width="100%" height="500px" frameborder="0" style="border:none; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.3);"></iframe>`;
-      // Set the value of the textarea
-      document.getElementById('embedCode').value = iframeCodeString;
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}
 
-      // Display the modal
-      document.getElementById('embedModal').style.display = 'flex';
-    }
-
-    // Function to close the modal
-    function closeEmbedModal() {
-      document.getElementById('embedModal').style.display = 'none';
-      // Optional: Clear the textarea when closing
-      document.getElementById('embedCode').value = '';
-    }
-
-  </script>
-
-</body>
-</html>
+{% block extra_js %}
+    <!-- Link to the JavaScript file specifically for the dashboard -->
+    <script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock extra_js %}

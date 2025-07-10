@@ -14,6 +14,13 @@ logger.addHandler(handler)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'statics'),
+]
+
 GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY").strip()
 HF_TOKEN = config("HF_TOKEN").strip()
 SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
@@ -21,7 +28,18 @@ DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",") if not DEBUG else []
 
+# CORS_ALLOWED_ORIGINS = [
+
+# ]
+
+CORS_TRUSTED_ORIGINS = [ 
+    'https://chatbot-api-platform-29773676777.us-central1.run.app', 
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -110,10 +128,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
-
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

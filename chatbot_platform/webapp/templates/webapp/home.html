@@ -1,195 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upload Knowledge Base | CAPI Studio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+{% extends 'webapp/base.html' %}
+{% load static %}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #add8e6, #00008b);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+{% block title %}Upload Knowledge Base | {{ block.super }}{% endblock title %}
 
-    header {
-      background-color: #ffffff;
-      color: rgb(0, 0, 0);
-      padding: 16px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    }
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock extra_head %}
 
-    header .logo {
-      font-size: 20px;
-      font-weight: 700;
-    }
+{% block content %}
+    <header>
+        <div class="logo">🤖 CAPI Studio</div>
+        <nav>
+            <span>Welcome, {{ request.user.username }}</span>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </nav>
+    </header>
 
-    header nav a {
-      color: rgb(0, 0, 0);
-      margin-left: 24px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    header nav a:hover {
-      color: #cbd5e1;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-      /* background: url('https://www.transparenttextures.com/patterns/purty-wood.png'); */
-    }
-
-    .hero {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-
-    .hero h1 {
-      font-size: 50px;
-      color: #ffffff;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-
-    .hero p {
-      color: #ffffff;
-      font-size: 20px;
-    }
-
-    .upload-card {
-      background-color: #ffffff;
-      border-radius: 12px;
-      padding: 40px;
-      /* width: 500%; */
-      max-width: 700px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-      animation: fadeIn 0.8s ease;
-    }
-
-    .upload-card h2 {
-      margin-bottom: 24px;
-      font-size: 45px;
-      font-weight: 600;
-      text-align: center;
-      color: #1f2937;
-    }
-
-    .upload-card form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .upload-card form input[type="file"],
-    .upload-card form input[type="text"],
-    .upload-card form select,
-    .upload-card form textarea {
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .upload-card button[type="submit"] {
-      background: linear-gradient(to left, #add8e6, #00008b);
-      color: #fff;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .upload-card button[type="submit"]:hover {
-      background-color: #1e40af;
-    }
-
-    footer {
-      text-align: center;
-      padding: 16px;
-      font-size: 14px;
-      color: #6b7280;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      header nav {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Header -->
-  <header>
-    <div class="logo">🤖 CAPI Studio</div>
-    <nav>
-      <span>Welcome, {{ request.user.username }}</span>
-      <a href="{% url 'dashboard' %}">Dashboard</a>
-      <a href="{% url 'logout' %}">Logout</a>
-    </nav>
-  </header>
-
-  <!-- Main Content -->
-  <main>
-    <div class="hero">
-      <h1>Upload Knowledge Base</h1>
-      <p>Enhance your chatbot by feeding it your content</p>
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 
-    <div class="upload-card">
-      <h2>Upload a File</h2>
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Upload</button>
-      </form>
-    </div>
-  </main>
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Upload Knowledge Base</h1>
+            <p>Enhance your chatbot by feeding it your content</p>
+        </div>
 
-  <!-- Footer -->
-  <footer>
-    &copy; {{ year }} CAPI Studio. All rights reserved.
-  </footer>
+        <div class="upload-card">
+            <h2>Upload a File</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
 
-</body>
-</html>
+                <!-- Render form fields manually for better styling control -->
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="help-text">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}

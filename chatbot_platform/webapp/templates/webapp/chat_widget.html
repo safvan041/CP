@@ -1,132 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Chat with KnowledgeBase</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: linear-gradient(to right, #add8e6, #00008b);
-            color: #111827;
-        }
-        h2 {
-            margin-bottom: 1rem;
-        }
-        #chat-box {
-            font-size: 20px;
-            border: 1px solid #ccc;
-            padding: 15px;
-            height: 400px;
-            overflow-y: scroll;
-            background: white;
-            border-radius: 8px;
-        }
-        .msg {
-            margin-bottom: 12px;
-        }
-        .user-msg {
-            color: solid black;
-        }
-        .bot-msg {
-            color: soild black;
-        }
-        .timestamp {
-            font-size: 0.75rem;
-            color: #6b7280;
-            display: block;
-            margin-top: 2px;
-        }
-        #chat-form {
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #message {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 15px;
-            background: white;
-            color: solid black;
-            border: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: linear-gradient(to left, #add8e6, #00008b);
-        }
-        #typing-indicator {
-            font-style: italic;
-            color: #6b7280;
-            margin-top: 10px;
-        }
-        #mic-button {
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-    </style>
-</head>
-<body>
-    <h2>Chat with: {{ kb.title }}</h2>
-    <div id="chat-box"></div>
-    <div id="typing-indicator" style="display: none;">Bot is thinking...</div>
-    <form id="chat-form">
-        <input type="text" id="message" placeholder="Ask something..." autocomplete="off" required>
-        <button type="submit">Send</button>
-    </form>
+{% extends 'webapp/base.html' %}
+{% load static %}
 
-    <script>
-        const form = document.getElementById('chat-form');
-        const input = document.getElementById('message');
-        const chatBox = document.getElementById('chat-box');
-        const typingIndicator = document.getElementById('typing-indicator');
+{% block title %}Chat with {{ kb.title }}{% endblock title %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/chat_widget.css' %}">
+{% endblock extra_head %}
+
+{% block content %}
+    <!--
+      We add the Django-generated URLs and slugs as data attributes.
+      Our JavaScript will read these attributes to know which API to call.
+    -->
+    <div id="chat-container"
+          data-api-url="{% url 'chat_api' kb.widget_slug %}"
+          data-csrf-token="{{ csrf_token }}">
+          
+        <div class="chat-header">
+          <h2>Chat with: {{ kb.title }}</h2>
+        </div>
+
+        <div id="chat-box"></div>
+        <div id="typing-indicator" style="display: none;">Bot is thinking...</div>
         
+        <form id="chat-form">
+          <input type="text" id="message-input" placeholder="Ask something..." autocomplete="off" required>
+          <button type="submit">Send</button>
+        </form>
+    </div>
+{% endblock content %}
 
-        // Load chat history from sessionStorage
-        window.addEventListener('load', () => {
-            const history = JSON.parse(sessionStorage.getItem('chatHistory')) || [];
-            history.forEach(item => chatBox.innerHTML += item);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        function appendMessage(html) {
-            chatBox.innerHTML += html;
-            chatBox.scrollTop = chatBox.scrollHeight;
-            const history = JSON.parse(sessionStorage.getItem('chatHistory')) || [];
-            history.push(html);
-            sessionStorage.setItem('chatHistory', JSON.stringify(history));
-        }
-
-        function getTimestamp() {
-            const now = new Date();
-            return `<span class="timestamp">${now.toLocaleTimeString()}</span>`;
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const msg = input.value;
-            appendMessage(`<div class="msg user-msg"><strong>You:</strong> ${msg}${getTimestamp()}</div>`);
-            input.value = '';
-
-            typingIndicator.style.display = 'block';
-
-            const response = await fetch("{% url 'chat_api' kb.widget_slug %}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
-                body: JSON.stringify({ message: msg })
-            });
-
-            const data = await response.json();
-            typingIndicator.style.display = 'none';
-            appendMessage(`<div class="msg bot-msg"><strong>Bot:</strong> ${data.response}${getTimestamp()}</div>`);
-        });        
-    </script>
-</body>
-</html>
+{% block extra_js %}
+    <script src="{% static 'js/chat_widget.js' %}"></script>
+{% endblock extra_js %}

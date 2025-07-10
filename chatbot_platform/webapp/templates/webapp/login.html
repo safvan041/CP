@@ -1,108 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | CAPI Studio</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #add8e6, #00008b);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+{% extends 'webapp/base.html' %}
+{% load static %}
 
-        .login-container {
-            background-color: #ffffff;
-            padding: 30px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            width: 500px;
-            text-align: center;
-        }
+{% block title %}Login | {{ block.super }}{% endblock title %}
 
-        .login-container h2 {
-            font-size: 45px;
-            margin-bottom: 20px;
-            color: #333;
-        }
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock extra_head %}
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
+{% block body_class %}auth-page{% endblock body_class %}
 
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
+{% block content %}
+    <div class="auth-container">
+        
+        <!-- Message Display Area -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-        input[type="text"]:focus, input[type="password"]:focus {
-            border-color: #5c9ded;
-            outline: none;
-        }
+        <div class="auth-card">
+            <h2>Login</h2>
+            <form method="post">
+                {% csrf_token %}
 
-        button {
-            width: 100%;
-            padding: 10px;
-            background: linear-gradient(to left, #add8e6, #00008b);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+                <div class="form-group">
+                    <label for="id_username">Username</label>
+                    <input type="text" name="username" id="id_username" required>
+                </div>
 
-        button:hover {
-            background-color: #0056b3;
-        }
+                <div class="form-group">
+                    <label for="id_password">Password</label>
+                    <input type="password" name="password" id="id_password" required>
+                </div>
 
-        .message {
-            margin-top: 10px;
-            font-size: 14px;
-        }
+                <button type="submit">Login</button>
+            </form>
 
-        .message a {
-            color: #0056b4;
-            text-decoration: none;
-        }
-
-        .message a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post">
-            {% csrf_token %}
-            <label for="username">Username:</label>
-            <input type="text" name="username" required><br>
-
-            <label for="password">Password:</label>
-            <input type="password" name="password" required><br>
-
-            <button type="submit">Login</button>
-        </form>
-
-        <div class="message">
-            <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+            <div class="switch-form-link">
+                <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+            </div>
         </div>
     </div>
-
-</body>
-</html>
+{% endblock content %}

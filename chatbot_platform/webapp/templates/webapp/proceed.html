@@ -1,169 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Proceed | CAPI Studio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    * {
-      box-sizing: border-box;
-      padding: 0;
-      margin: 0;
-    }
+{% extends 'webapp/base.html' %}
+{% load static %}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(to right, #add8e6, #00008b);
-      color: #1e293b;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+{% block title %}Proceed | {{ block.super }}{% endblock title %}
 
-    header {
-      background-color: #ffffff;
-      color: rgb(0, 0, 0);
-      padding: 16px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/proceed.css' %}">
+{% endblock extra_head %}
 
-    header h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
+{% block content %}
+    <header>
+        <h1>Proceed with Knowledge Base</h1>
+        <a href="{% url 'dashboard' %}" class="nav-link">← Back to Dashboard</a>
+    </header>
 
-    .model-select {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-    }
-
-    .model-select select {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
-    }
-
-    .nav-link {
-      color: white;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      background-color: #475569;
-      padding: 8px 14px;
-      border-radius: 6px;
-      transition: background-color 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background-color: #334155;
-    }
-
-    main {
-      max-width: 800px;
-      margin: 40px auto;
-      background-color: white;
-      padding: 32px;
-      border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-    }
-
-    main h2 {
-      font-size: 45px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-
-    .info {
-      margin-bottom: 24px;
-      font-size: 16px;
-      line-height: 1.6;
-    }
-
-    .info p {
-      margin-bottom: 10px;
-    }
-
-    .info strong {
-      color: #475569;
-    }
-
-    .info a {
-      color: #2563eb;
-      text-decoration: none;
-    }
-
-    .info a:hover {
-      text-decoration: underline;
-    }
-
-    .section-placeholder {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: 8px;
-      text-align: center;
-      color: #64748b;
-      font-size: 15px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 16px;
-      font-size: 14px;
-      color: #6b7280;
-      background-color: #f8fafc;
-      margin-top: auto;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .model-select {
-        width: 100%;
-        justify-content: space-between;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    
-    <h1>Proceed with Knowledge Base</h1>
-    <a href="{% url 'dashboard' %}" class="nav-link">← Back to Dashboard</a>
-  </header>
-
-  <main>
-    <h2>Knowledge Base Details</h2>
-    <div class="info">
-      <p><strong>Title:</strong> {{ knowledge_base.title }}</p>
-      <p><strong>Uploaded On:</strong> {{ knowledge_base.created_at }}</p>
-      <p><strong>File:</strong> <a href="{{ knowledge_base.file.url }}" download>Download</a></p>
+    <!-- Message Display Area -->
+    <div class="message-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="message {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 
-    <div class="section-placeholder">
-      Your Uploaded File Has Been Stored In The DataBase And Test Widget Is Ready, Please Visit Dashboard To Test The Widget. 
-    </div>
-  </main>
+    <main>
+        <h2>Knowledge Base Details</h2>
 
-  <footer>
-    &copy; {{ year }} CAPI Studio. All rights reserved.
-  </footer>
+        <div class="info-card">
+            <div class="info-item">
+                <strong>Title:</strong>
+                <span>{{ knowledge_base.title }}</span>
+            </div>
+            <div class="info-item">
+                <strong>Uploaded On:</strong>
+                <span>{{ knowledge_base.created_at|date:"F j, Y, P" }}</span>
+            </div>
+            <div class="info-item">
+                <strong>File:</strong>
+                <span><a href="{{ knowledge_base.file.url }}" download>Download</a></span>
+            </div>
+        </div>
 
-</body>
-</html>
+        <div class="status-box">
+            <p>Your uploaded file has been processed and your chatbot widget is ready.</p>
+            <p>Please visit the dashboard to test the widget.</p>
+        </div>
+    </main>
+
+    <footer>
+        &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
+    </footer>
+{% endblock content %}

@@ -2,6 +2,7 @@
 env/
 .venv/
 test1/
+venv/
 
 # Cache & compiled
 _pycache_/

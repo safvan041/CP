@@ -1,0 +1,124 @@
+/* auth.css - Shared styles for login and signup pages */
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to right, #add8e6, #00008b);
+}
+
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Styles for the message notification container */
+.messages {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+.message {
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.auth-card {
+    background-color: #ffffff;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.auth-card h2 {
+    font-size: 2rem;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #1f2937;
+}
+
+/* Styles for manual form rendering */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #00008b;
+    box-shadow: 0 0 0 2px rgba(0, 0, 139, 0.2);
+}
+
+.auth-card button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(to right, #00008b, #4b0082);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-card button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.switch-form-link {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.switch-form-link a {
+    color: #00008b;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.switch-form-link a:hover {
+    text-decoration: underline;
+}
