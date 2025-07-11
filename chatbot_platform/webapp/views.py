@@ -4,6 +4,8 @@ import os
 import json
 import uuid
 import logging
+import shutil
+import tempfile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
@@ -17,7 +19,7 @@ from django.conf import settings
 from webapp.forms import KnowledgeBaseForm
 from core.models import KnowledgeBase
 from core.utils.file_reader import extract_text_from_file
-from core.utils.vector.vector_logic import delete_vector_store, embed_and_store, search_similar_chunks
+from core.utils.vector.vector_logic import delete_vector_store as remove_faiss_data, embed_and_store, search_similar_chunks
 from .utils.genai_llm import generate_genai_response
 from core.utils.embeddings.embedding_service import get_embedding_model
 
@@ -145,21 +147,20 @@ def proceed_view(request, kb_id):
 @require_POST
 def delete_kb_view(request, kb_id):
     kb = get_object_or_404(KnowledgeBase, id=kb_id, user=request.user)
-    vector_index_name = f"kb_{kb.id}"
 
-    # Delete associated FAISS index and chunks
-    try:
-        delete_vector_store(vector_index_name)
-        print(f"Deleted FAISS vector data for {vector_index_name}")
-    except Exception as e:
-        print(f"Warning: Failed to delete vector store for {vector_index_name}: {e}")
+    # Delete file from media storage (local or GCS)
+    if kb.file and kb.file.storage.exists(kb.file.name):
+        kb.file.delete()
+        print(f"Deleted media file: {kb.file.name}")
 
-    # Delete knowledge base object (file and record)
-    kb.file.delete(save=False)  # Delete file from storage (GCS/local)
+    # Delete associated FAISS index and chunk files
+    index_name = f"kb_{kb.id}"
+    remove_faiss_data(index_name)
+
+    # Delete from DB
     kb.delete()
-
-    messages.success(request, f"Knowledge Base '{kb.title}' deleted successfully.")
     return redirect("dashboard")
+
 
 def chat_widget_view(request, widget_slug):
     kb = get_object_or_404(KnowledgeBase, widget_slug=widget_slug)

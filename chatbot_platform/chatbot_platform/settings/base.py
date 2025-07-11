@@ -85,10 +85,12 @@ USE_GCS = False
 # GS_BUCKET_NAME = config("GS_BUCKET_NAME", default="chatbot-api-platform")
 
 GS_PROJECT_ID = config("GS_PROJECT_ID", default="None")
+if USE_GCS:
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    GS_DEFAULT_ACL = 'publicRead'
+else:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage' (uncomment this if you want to use cloude storage)
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-# GS_DEFAULT_ACL = 'publicRead'
 
 # logger.info(f"DEBUG: OS environment DB_USER: {os.environ.get('DB_USER')}")
 # logger.info(f"DEBUG: Config DB_USER: {config('DB_USER')}")

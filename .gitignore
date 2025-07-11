@@ -9,3 +9,6 @@ _pycache_/
 .env
 env/
 test1/
+media/
+faiss_data/
+vectorstore/
