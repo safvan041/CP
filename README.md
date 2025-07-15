@@ -1,8 +1,15 @@
-
+---------------
 🧠 CAPI Studio
-
+--------------
 
 A Django-based chatbot platform allowing users to upload knowledge base files, generate vector embeddings, and interact with AI-powered chat widgets.
+
+
+------------
+Note:
+------------
+
+If you are using this repo from 07-07-2025 to {present date}, make sure to use your own models and DBs. 
 
 ------------------------------
 📄 License
