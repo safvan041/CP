@@ -11,6 +11,12 @@ class UserProfile(models.Model):
 
 
 class KnowledgeBase(models.Model):
+    STATUS_CHOICES = [
+        ('uploaded', 'Uploaded'),       
+        ('processing', 'Processing'),   
+        ('completed', 'Completed'),     
+        ('failed', 'Failed'),           
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to="knowledge_bases/")  # Use default storage
@@ -20,9 +26,23 @@ class KnowledgeBase(models.Model):
     is_embedded = models.BooleanField(default=False)
     widget_slug = models.SlugField(unique=True, blank=True, null=True)
     embedded = models.BooleanField(default=False) 
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='uploaded', # Default status when a new KB is created
+        help_text="Current processing status of the knowledge base embeddings."
+    )
+    error_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Stores any error messages if embedding fails."
+    )
 
     def __str__(self):
         return f"{self.title} ({self.user.username})"
+    
+    class Meta:
+        verbose_name_plural = "Knowledge Bases"
 
 
 class ChatbotWidget(models.Model):

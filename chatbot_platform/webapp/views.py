@@ -18,6 +18,7 @@ from django.conf import settings
 
 from webapp.forms import KnowledgeBaseForm
 from core.models import KnowledgeBase
+from core.tasks import process_knowledge_base_embedding
 from core.utils.file_reader import extract_text_from_file
 from core.utils.vector.vector_logic import delete_vector_store as remove_faiss_data, embed_and_store, search_similar_chunks
 from .utils.genai_llm import generate_genai_response
@@ -109,40 +110,33 @@ def home_view(request):
 
 @login_required
 def proceed_view(request, kb_id):
-    kb = get_object_or_404(KnowledgeBase, pk=kb_id, user=request.user) # Added user filter for security
+    kb = get_object_or_404(KnowledgeBase, pk=kb_id, user=request.user)
 
-    if not kb.is_embedded:
-        print("[DEBUG] File storage backend:", kb.file.storage.__class__)
-        # Pass the FileField object (kb.file) directly to the extraction function
-        extracted_text = extract_text_from_file(kb.file) # <--- CRITICAL CHANGE
-
-        # Check if the extracted_text indicates an error during processing
-        if extracted_text.startswith("Error:"):
-            messages.error(request, extracted_text) # Display the specific error message
-            return redirect("dashboard")
-
-        if not extracted_text.strip():
-            messages.warning(request, "The uploaded file has no readable text or is empty.")
-            return redirect("dashboard")
+    # Check current status of the knowledge base
+    if kb.status == 'completed':
+        messages.info(request, f"Knowledge base '{kb.title}' is already embedded.")
+    elif kb.status == 'processing':
+        messages.info(request, f"Knowledge base '{kb.title}' is currently being processed. Please check back shortly.")
+    else: # status is 'uploaded' or 'failed' (can retry)
         try:
-            model = get_embedding_model() # Ensure this is correctly defined and returns your Gemini model
-            vector_index_name = f"kb_{kb.id}"
+            # Set status to 'processing' immediately before dispatching, for instant UI feedback
+            kb.status = 'processing'
+            kb.error_message = "" # Clear any previous error
+            kb.save(update_fields=['status', 'error_message']) # Update only these fields
 
-            # Assuming embed_and_store handles the entire process and doesn't need file paths anymore
-            embed_and_store([extracted_text], vector_index_name, model)
+            # Dispatch the embedding task to Celery
+            process_knowledge_base_embedding.delay(kb.id) # This is the key change!
 
-            kb.widget_slug = str(uuid.uuid4())[:8] # Generates a unique 8-char slug
-            kb.is_embedded = True
-            kb.save()
-            messages.success(request, "Knowledge base embedded successfully!") # Add success message
+            messages.success(request, f"Embedding process for '{kb.title}' has started in the background.")
         except Exception as e:
-            messages.error(request, f"Failed to embed knowledge base: {e}")
-            return redirect("dashboard")
-    else:
-        messages.info(request, "Knowledge base is already embedded.")
+            messages.error(request, f"Failed to start embedding process for '{kb.title}': {e}")
+            # If dispatching itself fails, mark as failed immediately
+            kb.status = 'failed'
+            kb.error_message = f"Task dispatch failed: {e}"
+            kb.save(update_fields=['status', 'error_message'])
 
-    return render(request, 'webapp/proceed.html', {'knowledge_base': kb})
-
+    return redirect("dashboard")
+    
 @login_required
 @require_POST
 def delete_kb_view(request, kb_id):
