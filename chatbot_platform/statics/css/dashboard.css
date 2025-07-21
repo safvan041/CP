@@ -131,9 +131,9 @@ h2 {
 
 
 .knowledge-base-list {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
 }
 
 .knowledge-base-item {
