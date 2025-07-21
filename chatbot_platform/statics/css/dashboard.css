@@ -165,7 +165,7 @@ h2 {
 .knowledge-base-item a {
     /* This might be overly broad. Consider being more specific for links within buttons. */
     /* If you mean links outside buttons, define that separately. */
-    color: inherit; /* Inherit color from parent for general links */
+    color: white; /* Inherit color from parent for general links */
     font-weight: inherit;
     text-decoration: none; /* Remove underline by default */
 }

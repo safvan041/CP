@@ -46,11 +46,11 @@
 
                 <div class="buttons">
                     {% if kb.status == 'uploaded' or kb.status == 'failed' %}
-                        <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed">Proceed & Embed</a>
+                        <a href="{% url 'proceed' kb.id %}" class="btn btn-proceed" onclick="this.classList.add('disable'); this.innerText='Starting...'">Proceed & Embed</a>
                     {% elif kb.status == 'processing' %}
                         <button class="btn btn-processing" disabled>Embedding In Progress...</button>
                     {% elif kb.status == 'completed' %}
-                        <a href="{% url 'chat_widget_view' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
+                        <a href="{% url 'chat_widget' kb.widget_slug %}" class="btn btn-test" target="_blank">Test Widget</a>
                         {# IMPORTANT CHANGE HERE: Added data-base-url #}
                         <button class="btn btn-api"
                                 onclick="showEmbedModal('{{ kb.widget_slug }}', '{{ request.scheme }}://{{ request.get_host }}/chat/')">
@@ -64,7 +64,7 @@
                 </div>
             </li>
             {% empty %}
-            <li class="no-kbs-message">No knowledge bases uploaded yet. <a href="{% url 'home' %}">Upload your first one!</a></li>
+            <li class="no-kbs-message">No knowledge bases uploaded yet. <a href="{% url 'upload' %}">Upload your first one!</a></li>
             {% endfor %}
         </ul>
     </main>

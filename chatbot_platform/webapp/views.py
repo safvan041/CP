@@ -113,27 +113,26 @@ def proceed_view(request, kb_id):
     kb = get_object_or_404(KnowledgeBase, pk=kb_id, user=request.user)
 
     # Check current status of the knowledge base
+    # These checks are primarily for user feedback to prevent re-triggering tasks
     if kb.status == 'completed':
         messages.info(request, f"Knowledge base '{kb.title}' is already embedded.")
+        return redirect("dashboard")
     elif kb.status == 'processing':
         messages.info(request, f"Knowledge base '{kb.title}' is currently being processed. Please check back shortly.")
+        return redirect("dashboard")
     else: # status is 'uploaded' or 'failed' (can retry)
         try:
-            # Set status to 'processing' immediately before dispatching, for instant UI feedback
-            kb.status = 'processing'
-            kb.error_message = "" # Clear any previous error
-            kb.save(update_fields=['status', 'error_message']) # Update only these fields
+            # ONLY DISPATCH THE TASK HERE.
+            # The task itself will handle setting the status to 'processing' atomically.
+            process_knowledge_base_embedding.delay(kb.id)
 
-            # Dispatch the embedding task to Celery
-            process_knowledge_base_embedding.delay(kb.id) # This is the key change!
-
-            messages.success(request, f"Embedding process for '{kb.title}' has started in the background.")
+            messages.success(request, f"Embedding process for '{kb.title}' has been initiated. Status will update shortly.")
         except Exception as e:
-            messages.error(request, f"Failed to start embedding process for '{kb.title}': {e}")
-            # If dispatching itself fails, mark as failed immediately
-            kb.status = 'failed'
-            kb.error_message = f"Task dispatch failed: {e}"
-            kb.save(update_fields=['status', 'error_message'])
+            logger.error(f"Failed to dispatch embedding task for KB {kb.id}: {e}", exc_info=True)
+            messages.error(request, f"Failed to start embedding process for '{kb.title}': {e}. Please try again.")
+            # We don't change kb.status here unless we want to mark it as 'dispatch_failed'
+            # For now, it will remain 'uploaded' or 'failed' if dispatch fails
+            # and the user can click 'Proceed' again.
 
     return redirect("dashboard")
     

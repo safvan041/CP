@@ -25,7 +25,6 @@ class KnowledgeBase(models.Model):
 
     is_embedded = models.BooleanField(default=False)
     widget_slug = models.SlugField(unique=True, blank=True, null=True)
-    embedded = models.BooleanField(default=False) 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
