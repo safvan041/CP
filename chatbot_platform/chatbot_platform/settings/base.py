@@ -49,12 +49,14 @@ INSTALLED_APPS = [
     'core',
     'webapp',
     'storages',
+    'axes',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -145,3 +147,65 @@ X_FRAME_OPTIONS = 'ALLOWALL'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY")
+
+
+#AXES CONFIG
+AXES_ENABLED = True
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = None
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_USE_USER_AGENT = False
+# AXES_LOCKOUT_TEMPLATE = 'axes/locked_out.html'
+AXES_BEHIND_REVERSE_PROXY = False
+
+
+#app level logging.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {name} {message}', # Shows logger name (e.g., webapp.views)
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG', # This handler outputs all messages from DEBUG level up
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': { # Django's own internal logs
+            'handlers': ['console'],
+            'level': 'INFO', # Keep this at INFO to avoid excessive verbosity from Django framework
+            'propagate': False,
+        },
+        'webapp': { # Logger for your webapp app
+            'handlers': ['console'],
+            'level': 'DEBUG', # <--- CRUCIAL: Set to DEBUG to see all your logger.debug/info calls
+            'propagate': False,
+        },
+        'core': { # Logger for your core app
+            'handlers': ['console'],
+            'level': 'DEBUG', # <--- CRUCIAL: Set to DEBUG to see all your logger.debug/info calls
+            'propagate': False,
+        },
+        'celery': { # If you still have Celery configured, this controls its logging
+            'handlers': ['console'],
+            'level': 'INFO', # Can be DEBUG if you need detailed Celery logs
+            'propagate': False,
+        },
+        # You can add more specific loggers here if needed, e.g.,
+        # 'core.utils.conversation.manager': {
+        #     'handlers': ['console'],
+        #     'level': 'DEBUG',
+        #     'propagate': False,
+        # },
+    },
+    'root': { # Default logger for anything not explicitly handled by specific loggers
+        'handlers': ['console'],
+        'level': 'WARNING', # Generally keep root logger at WARNING or INFO
+    },
+}
