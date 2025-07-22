@@ -27,15 +27,30 @@ SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",") if not DEBUG else []
+USE_X_FORWARDED_HOST = True
 
 # CORS_ALLOWED_ORIGINS = [
 
 # ]
 
 CORS_TRUSTED_ORIGINS = [ 
-    'https://chatbot-api-platform-29773676777.us-central1.run.app', 
+    'https://chatbot-api-platform-29773676777.us-central1.run.app',
+    'https://*.app.github.dev',
+    'https://vigilant-pancake-5wq9xpv4p9vc4ggx-8000.app.github.dev',
+
+    'http://localhost:8000',
+    "http://127.0.0.1:8000",
 ]
 
+CSRF_TRUSTED_ORIGINS = [ 
+    'https://*.app.github.dev',
+    'https://vigilant-pancake-5wq9xpv4p9vc4ggx-8000.app.github.dev',
+
+    'http://localhost:8000',
+    "http://127.0.0.1:8000",
+]
+
+SESSION_COOKIE_SECURE = False
 CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [
@@ -157,6 +172,10 @@ AXES_LOCK_OUT_AT_FAILURE = True
 AXES_USE_USER_AGENT = False
 # AXES_LOCKOUT_TEMPLATE = 'axes/locked_out.html'
 AXES_BEHIND_REVERSE_PROXY = False
+
+
+#email-config
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 #app level logging.

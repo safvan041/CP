@@ -1,35 +1,46 @@
 /* auth.css - Shared styles for login and signup pages */
 
+/* --- General Body & Container Styles --- */
 body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(to right, #add8e6, #00008b);
+    background: linear-gradient(to right, #add8e6, #00008b); /* Your background */
+    min-height: 100vh; /* Ensure full viewport height */
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
 }
 
+/* This class should be applied to the <body> or a main wrapper div if extending base.html */
 .auth-page {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    box-sizing: border-box; /* Include padding in element's total width/height */
 }
 
 .auth-container {
     width: 100%;
     max-width: 400px;
+    /* Styles are mostly handled by auth-card */
 }
 
-/* Styles for the message notification container */
+/* --- Message Notification Styles --- */
 .messages {
     list-style: none;
     padding: 0;
     margin-bottom: 20px;
+    text-align: left; /* Align messages to left */
 }
 .message {
     padding: 12px 15px;
     border-radius: 6px;
     font-size: 0.9rem;
+    line-height: 1.4; /* Improve readability */
+    margin-bottom: 10px; /* Consistent spacing between messages */
 }
 .message.success {
     background-color: #d4edda;
@@ -41,58 +52,101 @@ body {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+/* You may want to add info and warning messages if you use them */
+.message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+.message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
 
+/* --- Form Field Error and Help Text Styles (Already Integrated) --- */
+.errorlist {
+    list-style: none;
+    padding: 0;
+    margin-top: 5px;
+    margin-bottom: 0;
+    color: #dc3545; /* Red */
+    font-size: 0.85em;
+    font-weight: 500;
+    text-align: left; /* Ensure alignment with input */
+}
+.errorlist li {
+    margin-bottom: 3px;
+}
+.helptext {
+    font-size: 0.8em;
+    color: #6c757d; /* Muted grey */
+    display: block;
+    margin-top: 5px;
+    text-align: left; /* Ensure alignment with input */
+}
+
+/* --- Auth Card (Main Form Box) Styles --- */
 .auth-card {
     background-color: #ffffff;
     padding: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Slightly more prominent shadow */
     border-radius: 12px;
     text-align: center;
 }
 
 .auth-card h2 {
-    font-size: 2rem;
+    font-size: 2rem; /* Consistent heading size */
     margin-top: 0;
     margin-bottom: 20px;
-    color: #1f2937;
+    color: #1f2937; /* Dark text for headings */
 }
 
-/* Styles for manual form rendering */
+/* --- Form Group & Input Styles --- */
 .form-group {
     display: flex;
     flex-direction: column;
-    text-align: left;
+    text-align: left; /* Aligns label/input */
     margin-bottom: 20px;
 }
 
 .form-group label {
     margin-bottom: 8px;
     font-weight: 600;
-    color: #374151;
+    color: #374151; /* Label color */
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
+    width: 100%;
     padding: 12px 14px;
-    border: 1px solid #d1d5db;
+    border: 1px solid #d1d5db; /* Light grey border */
     border-radius: 6px;
     font-size: 1rem;
     box-sizing: border-box;
+    color: #1f2937; /* Text color inside input */
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #00008b;
-    box-shadow: 0 0 0 2px rgba(0, 0, 139, 0.2);
+    border-color: #00008b; /* Your blue border on focus */
+    box-shadow: 0 0 0 2px rgba(0, 0, 139, 0.2); /* Your blue glow on focus */
+}
+/* Optional: Style for input fields when they have errors */
+.form-group input.is-invalid,
+.form-group input:invalid { /* :invalid can be used by browsers directly for HTML5 validation */
+    border-color: #dc3545; /* Red border for invalid fields */
+    box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.25); /* Subtle red glow */
 }
 
+/* --- Submit Button Styles --- */
 .auth-card button[type="submit"] {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(to right, #00008b, #4b0082);
+    background: linear-gradient(to right, #00008b, #4b0082); /* Your blue/purple gradient */
     color: white;
     border: none;
     border-radius: 6px;
@@ -107,18 +161,69 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* --- Switch Form Link (Sign up/Login here) Styles --- */
 .switch-form-link {
     margin-top: 20px;
     font-size: 0.9rem;
     color: #4b5563;
 }
 
+.switch-form-link p { /* Ensure consistency if p tags are used directly */
+    margin: 0;
+}
+
 .switch-form-link a {
-    color: #00008b;
+    color: #00008b; /* Your blue link color */
     text-decoration: none;
     font-weight: 600;
 }
 
 .switch-form-link a:hover {
     text-decoration: underline;
+}
+
+/* --- NEW: Password Reset Page Specific Styles --- */
+
+/* Intro text for password reset forms (e.g., "Forgotten your password? Enter your email...") */
+.auth-intro {
+    font-size: 15px;
+    color: #475569;
+    margin-bottom: 25px; /* Space below intro text */
+    line-height: 1.5; /* Improve readability */
+}
+
+/* General link style within auth pages (like "Return to Login", "Request a new password reset") */
+.auth-link {
+    font-size: 14px;
+    margin-top: 20px;
+    color: #475569;
+}
+
+.auth-link a {
+    color: #00008b; /* Consistent blue link color */
+    text-decoration: none;
+    font-weight: 600;
+    transition: text-decoration 0.2s ease;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+/* --- Media Queries (Align with your overall responsive design) --- */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 20px;
+        border-radius: 8px;
+    }
+    .auth-card h2 {
+        font-size: 24px;
+    }
+    .auth-card button[type="submit"] {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    .messages, .auth-intro, .auth-link {
+        font-size: 0.85rem;
+    }
 }

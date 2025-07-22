@@ -19,7 +19,7 @@ from django.conf import settings
 # Removed: from datetime import timedelta # No longer needed for custom lockout
 # Removed: from django.db.models import F # No longer needed for custom lockout
 
-from webapp.forms import KnowledgeBaseForm
+from webapp.forms import KnowledgeBaseForm, CustomUserCreationForm
 from core.models import KnowledgeBase
 # Removed: from core.models import FailedLoginAttempt # No longer needed for custom lockout
 
@@ -34,28 +34,34 @@ from core.utils.embeddings.embedding_service import get_embedding_model
 
 logger = logging.getLogger(__name__)
 
-# Removed: Custom Brute-Force Protection Configuration Constants
-# Removed: LOGIN_ATTEMPT_LIMIT
-# Removed: LOCKOUT_TIME_MINUTES
-# Removed: TRACK_FAILED_ATTEMPTS_BY_IP
-
-# Removed: get_client_ip function
 
 
 def signup_view(request):
+    """
+    Handles user registration using CustomUserCreationForm for consistent password validation.
+    """
     if request.method == "POST":
-        username = request.POST["username"]
-        email = request.POST["email"]
-        password = request.POST["password"]
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
-        else:
-            user = User.objects.create_user(username=username, email=email, password=password)
+        form = CustomUserCreationForm(request.POST) # Use the new form here
+        if form.is_valid():
+            user = form.save() # The form's save() method creates the user and hashes the password
             messages.success(request, "Account created successfully. Please log in.")
+            logger.info(f"New user '{user.username}' signed up.")
             return redirect("login")
+        else:
+            # # If the form is invalid, its errors will contain validation messages
+            # # from AUTH_PASSWORD_VALIDATORS and any custom clean methods (like unique email).
+            # for field, errors in form.errors.items():
+            #     for error in errors:
+            #         # 'non_field_errors' is for errors not tied to a specific field (e.g., password mismatch)
+            #         if field == '__all__': 
+            #             messages.error(request, f"Error: {error}")
+            #         else:
+            #             messages.error(request, f"Error in {field}: {error}")
+            messages.error(request, "There were errors in your registration. Please correct them and try again.")
+    else:
+        form = CustomUserCreationForm() # Initialize an empty form for GET requests
 
-    return render(request, "webapp/signup.html")
+    return render(request, "webapp/signup.html", {"form": form})
 
 
 def login_view(request):
