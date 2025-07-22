@@ -4,8 +4,6 @@ import os
 import json
 import uuid
 import logging
-# Removed: import shutil
-# Removed: import tempfile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
@@ -15,16 +13,11 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-# Removed: from django.utils import timezone # No longer needed for custom lockout
-# Removed: from datetime import timedelta # No longer needed for custom lockout
-# Removed: from django.db.models import F # No longer needed for custom lockout
+from django.http import QueryDict
+
 
 from webapp.forms import KnowledgeBaseForm, CustomUserCreationForm
 from core.models import KnowledgeBase
-# Removed: from core.models import FailedLoginAttempt # No longer needed for custom lockout
-
-# If you decided to keep Celery setup, but it's not active due to resource:
-# from core.tasks import process_knowledge_base_embedding
 
 # Standard utility imports
 from core.utils.file_reader import extract_text_from_file
@@ -38,28 +31,26 @@ logger = logging.getLogger(__name__)
 
 def signup_view(request):
     """
-    Handles user registration using CustomUserCreationForm for consistent password validation.
+    Handles user registration. Includes a workaround for the 'password1' required error.
     """
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST) # Use the new form here
+       
+
+        form = CustomUserCreationForm(request.POST)  # Pass the modified POST data
+        logger.debug(f"Signup form submitted via POST.")
         if form.is_valid():
-            user = form.save() # The form's save() method creates the user and hashes the password
+            logger.debug(f"Signup form is valid. Saving user.")
+            user = form.save()
             messages.success(request, "Account created successfully. Please log in.")
             logger.info(f"New user '{user.username}' signed up.")
             return redirect("login")
         else:
-            # # If the form is invalid, its errors will contain validation messages
-            # # from AUTH_PASSWORD_VALIDATORS and any custom clean methods (like unique email).
-            # for field, errors in form.errors.items():
-            #     for error in errors:
-            #         # 'non_field_errors' is for errors not tied to a specific field (e.g., password mismatch)
-            #         if field == '__all__': 
-            #             messages.error(request, f"Error: {error}")
-            #         else:
-            #             messages.error(request, f"Error in {field}: {error}")
+            logger.debug(f"Signup form is invalid. errors: {form.errors.as_json()}")
             messages.error(request, "There were errors in your registration. Please correct them and try again.")
+
     else:
-        form = CustomUserCreationForm() # Initialize an empty form for GET requests
+        form = CustomUserCreationForm()
+        logger.debug("Signup form initialized for GET request.")
 
     return render(request, "webapp/signup.html", {"form": form})
 

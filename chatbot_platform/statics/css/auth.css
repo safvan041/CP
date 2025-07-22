@@ -10,6 +10,7 @@ body {
     display: flex;
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
+    color: #1e293b; /* General text color for readability */
 }
 
 /* This class should be applied to the <body> or a main wrapper div if extending base.html */
@@ -20,11 +21,12 @@ body {
     min-height: 100vh;
     padding: 20px;
     box-sizing: border-box; /* Include padding in element's total width/height */
+    width: 100%; /* Ensure it spans the width */
 }
 
 .auth-container {
     width: 100%;
-    max-width: 400px;
+    max-width: 400px; /* Max width for your auth forms */
     /* Styles are mostly handled by auth-card */
 }
 
@@ -34,6 +36,7 @@ body {
     padding: 0;
     margin-bottom: 20px;
     text-align: left; /* Align messages to left */
+    width: 100%; /* Ensure message container takes full width */
 }
 .message {
     padding: 12px 15px;
@@ -41,6 +44,9 @@ body {
     font-size: 0.9rem;
     line-height: 1.4; /* Improve readability */
     margin-bottom: 10px; /* Consistent spacing between messages */
+    display: block !important; /* Ensure visibility */
+    visibility: visible !important; /* Ensure visibility */
+    opacity: 1 !important; /* Ensure not transparent */
 }
 .message.success {
     background-color: #d4edda;
@@ -64,89 +70,98 @@ body {
     border: 1px solid #ffeeba;
 }
 
-/* --- Form Field Error and Help Text Styles (Already Integrated) --- */
+/* --- Form Field Error and Help Text Styles --- */
+
 .errorlist {
     list-style: none;
     padding: 0;
     margin-top: 5px;
     margin-bottom: 0;
-    color: #dc3545; /* Red */
+    color: #dc3545; /* Bright Red color for errors */
     font-size: 0.85em;
     font-weight: 500;
     text-align: left; /* Ensure alignment with input */
+    
+    /* CRUCIAL: Ensure visibility properties */
+    display: block !important; 
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 .errorlist li {
     margin-bottom: 3px;
+    color: #dc3545; /* Explicitly set color for list items too */
 }
+
 .helptext {
     font-size: 0.8em;
-    color: #6c757d; /* Muted grey */
+    color: #6c757d; /* Muted grey color */
     display: block;
     margin-top: 5px;
-    text-align: left; /* Ensure alignment with input */
+    text-align: left;
 }
 
 /* --- Auth Card (Main Form Box) Styles --- */
 .auth-card {
     background-color: #ffffff;
     padding: 30px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Slightly more prominent shadow */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     text-align: center;
 }
 
 .auth-card h2 {
-    font-size: 2rem; /* Consistent heading size */
+    font-size: 2rem;
     margin-top: 0;
     margin-bottom: 20px;
-    color: #1f2937; /* Dark text for headings */
+    color: #1f2937;
 }
 
 /* --- Form Group & Input Styles --- */
 .form-group {
     display: flex;
     flex-direction: column;
-    text-align: left; /* Aligns label/input */
+    text-align: left;
     margin-bottom: 20px;
 }
 
 .form-group label {
     margin-bottom: 8px;
     font-weight: 600;
-    color: #374151; /* Label color */
+    color: #374151;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #d1d5db; /* Light grey border */
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 1rem;
     box-sizing: border-box;
-    color: #1f2937; /* Text color inside input */
+    color: #1f2937;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #00008b; /* Your blue border on focus */
-    box-shadow: 0 0 0 2px rgba(0, 0, 139, 0.2); /* Your blue glow on focus */
+    border-color: #00008b;
+    box-shadow: 0 0 0 2px rgba(0, 0, 139, 0.2);
 }
-/* Optional: Style for input fields when they have errors */
-.form-group input.is-invalid,
-.form-group input:invalid { /* :invalid can be used by browsers directly for HTML5 validation */
-    border-color: #dc3545; /* Red border for invalid fields */
+/* Style for input fields when they have errors (red border) */
+.form-group input.error, /* When Django adds 'error' class */
+.form-group input:invalid { /* HTML5 validation (good fallback) */
+    border-color: #dc3545; /* Red border */
     box-shadow: 0 0 0 0.1rem rgba(220, 53, 69, 0.25); /* Subtle red glow */
 }
+
 
 /* --- Submit Button Styles --- */
 .auth-card button[type="submit"] {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(to right, #00008b, #4b0082); /* Your blue/purple gradient */
+    background: linear-gradient(to right, #00008b, #4b0082);
     color: white;
     border: none;
     border-radius: 6px;
@@ -168,12 +183,12 @@ body {
     color: #4b5563;
 }
 
-.switch-form-link p { /* Ensure consistency if p tags are used directly */
+.switch-form-link p {
     margin: 0;
 }
 
 .switch-form-link a {
-    color: #00008b; /* Your blue link color */
+    color: #00008b;
     text-decoration: none;
     font-weight: 600;
 }
@@ -182,17 +197,15 @@ body {
     text-decoration: underline;
 }
 
-/* --- NEW: Password Reset Page Specific Styles --- */
+/* --- Password Reset Page Specific Styles --- */
 
-/* Intro text for password reset forms (e.g., "Forgotten your password? Enter your email...") */
 .auth-intro {
     font-size: 15px;
     color: #475569;
-    margin-bottom: 25px; /* Space below intro text */
-    line-height: 1.5; /* Improve readability */
+    margin-bottom: 25px;
+    line-height: 1.5;
 }
 
-/* General link style within auth pages (like "Return to Login", "Request a new password reset") */
 .auth-link {
     font-size: 14px;
     margin-top: 20px;
@@ -200,7 +213,7 @@ body {
 }
 
 .auth-link a {
-    color: #00008b; /* Consistent blue link color */
+    color: #00008b;
     text-decoration: none;
     font-weight: 600;
     transition: text-decoration 0.2s ease;
