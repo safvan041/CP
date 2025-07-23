@@ -14,4 +14,5 @@ urlpatterns = [
     path("api/chat/<str:widget_slug>/", views.chat_api_view, name="chat_api"),
     path("get-widget-api/<slug:widget_slug>/", views.get_widget_api_view, name="get_widget_api"),
     path("delete/<int:kb_id>/", views.delete_kb_view, name="delete_kb"),
+    path('api/kb_status/<int:kb_id>/', views.get_kb_status_api_view, name='get_kb_status_api'),
 ]

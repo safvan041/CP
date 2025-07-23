@@ -19,6 +19,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.http import QueryDict
+from django.views.decorators.http import require_GET
 
 
 
@@ -197,17 +198,12 @@ def proceed_view(request, kb_id):
         return redirect("dashboard")
     else: # status is 'uploaded' or 'failed' (can retry)
         try:
-            # ONLY DISPATCH THE TASK HERE.
-            # The task itself will handle setting the status to 'processing' atomically.
             process_knowledge_base_embedding.delay(kb.id)
 
             messages.success(request, f"Embedding process for '{kb.title}' has been initiated. Status will update shortly.")
         except Exception as e:
             logger.error(f"Failed to dispatch embedding task for KB {kb.id}: {e}", exc_info=True)
             messages.error(request, f"Failed to start embedding process for '{kb.title}': {e}. Please try again.")
-            # We don't change kb.status here unless we want to mark it as 'dispatch_failed'
-            # For now, it will remain 'uploaded' or 'failed' if dispatch fails
-            # and the user can click 'Proceed' again.
 
     return redirect("dashboard")
     
@@ -305,3 +301,27 @@ def get_widget_api_view(request, widget_slug):
     kb = get_object_or_404(KnowledgeBase, widget_slug=widget_slug, user=request.user)
     iframe_code = f'<iframe src="{request.build_absolute_uri(f"/chat/{kb.widget_slug}/")}" width="100%" height="500px" frameborder="0"></iframe>'
     return JsonResponse({"iframe_code": iframe_code})
+
+
+@login_required 
+@require_GET 
+def get_kb_status_api_view(request, kb_id):
+    """
+    Returns the current status of a specific KnowledgeBase as JSON.
+    """
+    try:
+        kb = get_object_or_404(KnowledgeBase, pk=kb_id, user=request.user)
+        return JsonResponse({
+            'id': kb.id,
+            'status': kb.status,
+            'status_display': kb.get_status_display(), 
+            'is_embedded': kb.is_embedded,
+            'widget_slug': kb.widget_slug,
+            'error_message': kb.error_message if kb.status == 'failed' else None,
+            'source_files_count': kb.source_files.count() 
+        })
+    except KnowledgeBase.DoesNotExist:
+        return JsonResponse({'error': 'Knowledge Base not found.'}, status=404)
+    except Exception as e:
+        logger.error(f"Error fetching KB status for ID {kb_id}: {e}", exc_info=True)
+        return JsonResponse({'error': 'Internal server error.'}, status=500)
