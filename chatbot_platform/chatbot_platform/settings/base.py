@@ -27,7 +27,10 @@ SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",") if not DEBUG else []
-USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_HOST = True 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = False 
+
 
 # CORS_ALLOWED_ORIGINS = [
 
@@ -50,7 +53,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
-SESSION_COOKIE_SECURE = False
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [

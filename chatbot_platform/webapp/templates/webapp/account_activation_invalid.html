@@ -1,0 +1,18 @@
+{% extends 'webapp/base_auth.html' %}
+{% load static %}
+
+{% block title %}Activation Failed{% endblock title %}
+
+{% block auth_content %}
+    <div class="auth-card">
+        <h2>Account Activation Failed</h2>
+        <p class="auth-intro">Your account activation link is invalid or has expired. This could happen if:</p>
+        <ul>
+            <li>The link has already been used.</li>
+            <li>The link has expired (they are usually time-limited for security).</li>
+            <li>There was a typo in the link (though unlikely if copied from email).</li>
+        </ul>
+        <p class="auth-intro">Please ensure you are using the most recent link sent to you, or try <a href="{% url 'signup' %}">signing up again</a>.</p>
+        <p class="auth-link"><a href="{% url 'login' %}">Return to Login</a></p>
+    </div>
+{% endblock auth_content %}

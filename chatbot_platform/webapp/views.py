@@ -25,35 +25,90 @@ from core.utils.vector.vector_logic import delete_vector_store as remove_faiss_d
 from .utils.genai_llm import generate_genai_response
 from core.utils.embeddings.embedding_service import get_embedding_model
 
+# Imports for Email Sending
+from django.core.mail import EmailMultiAlternatives # For rich HTML emails
+from django.template.loader import render_to_string # To render email template
+from django.utils.http import urlsafe_base64_encode # To encode user ID in URL
+from django.utils.encoding import force_bytes # To encode user ID in URL
+from django.contrib.auth.tokens import default_token_generator # To generate secure token
+from django.utils.encoding import force_str # To decode uidb64
+from django.utils.http import urlsafe_base64_decode # To decode uidb64
+
+
 logger = logging.getLogger(__name__)
 
 
 
 def signup_view(request):
     """
-    Handles user registration. Includes a workaround for the 'password1' required error.
+    Handles user registration. New users are created as inactive and sent an email verification link.
     """
     if request.method == "POST":
-       
-
-        form = CustomUserCreationForm(request.POST)  # Pass the modified POST data
+        form = CustomUserCreationForm(request.POST)
         logger.debug(f"Signup form submitted via POST.")
+
+        # --- DEBUG LOGGING FOR HOST/PROTOCOL (keep for verification, these are very helpful) ---
+        logger.debug(f"DEBUG_HOST: request.get_host()={request.get_host()}")
+        logger.debug(f"DEBUG_HOST: request.META.HTTP_HOST={request.META.get('HTTP_HOST')}")
+        logger.debug(f"DEBUG_HOST: request.META.HTTP_X_FORWARDED_HOST={request.META.get('HTTP_X_FORWARDED_HOST')}")
+        logger.debug(f"DEBUG_HOST: request.META.HTTP_X_FORWARDED_PROTO={request.META.get('HTTP_X_FORWARDED_PROTO')}")
+        logger.debug(f"DEBUG_HOST: request.is_secure()={request.is_secure()}")
+        # --- END DEBUG LOGGING ---
+
         if form.is_valid():
-            logger.debug(f"Signup form is valid. Saving user.")
-            user = form.save()
-            messages.success(request, "Account created successfully. Please log in.")
-            logger.info(f"New user '{user.username}' signed up.")
+            user = form.save(commit=False)
+            user.is_active = False # User must verify email to activate account
+            user.save() # Now save the user
+
+            logger.info(f"New user '{user.username}' signed up (inactive). Sending verification email.")
+
+            # --- CRITICAL FIX HERE: Manually set the domain for the email link ---
+            # Get the actual external host from X-Forwarded-Host if available (typical for Codespaces)
+            # Otherwise, fall back to what request.get_host() provides.
+            # This ensures the email link is always correctly pointing to the public URL.
+            actual_domain = request.META.get('HTTP_X_FORWARDED_HOST') or request.get_host()
+            
+            # Ensure protocol is HTTPS (as request.is_secure() should be True now)
+            protocol = 'https' if request.is_secure() else 'http'
+            # --- END CRITICAL FIX ---
+
+
+            mail_subject = 'Activate your CAPI Studio account'
+            message = render_to_string('webapp/acc_activate_email.html', {
+                'user': user,
+                'domain': actual_domain, # Pass the *correctly determined* domain to the template
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+                'protocol': protocol, # Pass the correctly determined protocol
+            })
+
+            to_email = form.cleaned_data.get('email')
+            email = EmailMultiAlternatives(
+                        mail_subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [to_email]
+            )
+            email.attach_alternative(message, "text/html")
+            
+            try:
+                email.send()
+                messages.success(request, 'Please confirm your email address to complete the registration. Check your inbox!')
+                logger.info(f"Verification email sent to {to_email} for user {user.username}.")
+            except Exception as e:
+                logger.error(f"Failed to send verification email to {to_email} for user {user.username}: {e}", exc_info=True)
+                messages.error(request, 'Registration complete, but failed to send verification email. Please contact support.')
+
             return redirect("login")
         else:
             logger.debug(f"Signup form is invalid. errors: {form.errors.as_json()}")
-            messages.error(request, "There were errors in your registration. Please correct them and try again.")
+            messages.error(request, "Please correct the errors below and try again.")
 
     else:
         form = CustomUserCreationForm()
         logger.debug("Signup form initialized for GET request.")
 
     return render(request, "webapp/signup.html", {"form": form})
-
 
 def login_view(request):
     """
@@ -66,18 +121,18 @@ def login_view(request):
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
-        
-        # All custom brute-force protection logic removed.
-        # django-axes middleware automatically intercepts failed login attempts
-        # and manages lockouts before this view's authentication.
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            messages.success(request, "Logged in successfully!")
-            # django-axes automatically clears its own records on successful login.
-            logger.info(f"User '{username}' logged in successfully.")
-            return redirect("dashboard")
+            # --- NEW: Check if user is active ---
+            if user.is_active:
+                login(request, user)
+                messages.success(request, "Logged in successfully!")
+                logger.info(f"User '{username}' logged in successfully.")
+                return redirect("dashboard")
+            else:
+                messages.error(request, 'Your account is not active. Please confirm your email address by clicking the link in the verification email. You may need to check your spam folder.')
+                logger.warning(f"Login attempt for '{username}' failed: Account not active.")
         else:
             messages.error(request, "Invalid credentials")
             # django-axes automatically logs and tracks failed attempts here.
@@ -90,6 +145,30 @@ def logout_view(request):
     messages.success(request, "Logged out successfully!")
     logout(request)
     return redirect("login")
+
+def activate(request, uidb64, token):
+    """
+    Activates a user account using the UID and token from the verification email.
+    """
+    try:
+        # Decode the user ID from base64
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid) # Get the user object
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None # User not found or decode failed
+
+    if user is not None and default_token_generator.check_token(user, token):
+        # Token is valid, activate the user
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Thank you for your email confirmation. Your account is now active. Please log in.')
+        logger.info(f"User '{user.username}' (ID: {user.pk}) activated successfully.")
+        return redirect('login') # Redirect to login page
+    else:
+        # Token is invalid or expired
+        messages.error(request, 'Activation link is invalid or has expired! Please try signing up again or contact support.')
+        logger.warning(f"Activation failed for UID '{uidb64}'. Token invalid or user not found.")
+        return render(request, 'webapp/account_activation_invalid.html') # Render an error page
 
 
 @login_required
