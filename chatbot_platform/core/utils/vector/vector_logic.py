@@ -5,14 +5,28 @@ import pickle
 import numpy as np
 import os
 import tempfile
+import logging # NEW: Import logging
+from pathlib import Path # NEW: For robust path handling
+
+# Ensure these are installed if you plan to use LangChain text splitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter # NEW: For text splitting
+    from langchain_core.documents import Document # NEW: For creating LangChain Document objects
+except ImportError:
+    RecursiveCharacterTextSplitter = None
+    Document = None
+    logging.warning("LangChain text_splitters not installed. Text splitting will be basic/not work.")
+
+
 from django.conf import settings
 from google.cloud import storage
+
+logger = logging.getLogger(__name__) # NEW: Initialize logger
 
 # --- GCS Helper Functions ---
 
 def _get_gcs_client():
     project_id = getattr(settings, "GS_PROJECT_ID", None)
-    # If project_id is "None" string (from default config), treat as None
     return storage.Client(project=project_id if project_id and project_id != "None" else None)
 
 def _upload_blob(bucket_name, source_file_name, destination_blob_name):
@@ -21,9 +35,9 @@ def _upload_blob(bucket_name, source_file_name, destination_blob_name):
     blob = bucket.blob(destination_blob_name)
     try:
         blob.upload_from_filename(source_file_name)
-        print(f"Uploaded {source_file_name} to gs://{bucket_name}/{destination_blob_name}")
+        logger.info(f"Uploaded {source_file_name} to gs://{bucket_name}/{destination_blob_name}") # Use logger
     except Exception as e:
-        print(f"GCS upload failed for {destination_blob_name}: {e}")
+        logger.error(f"GCS upload failed for {destination_blob_name}: {e}", exc_info=True) # Use logger
         raise
 
 def _download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -32,9 +46,9 @@ def _download_blob(bucket_name, source_blob_name, destination_file_name):
     blob = bucket.blob(source_blob_name)
     try:
         blob.download_to_filename(destination_file_name)
-        print(f"Downloaded gs://{bucket_name}/{source_blob_name} to {destination_file_name}")
+        logger.info(f"Downloaded gs://{bucket_name}/{source_blob_name} to {destination_file_name}") # Use logger
     except Exception as e:
-        print(f"GCS download failed for {source_blob_name}: {e}")
+        logger.error(f"GCS download failed for {source_blob_name}: {e}", exc_info=True) # Use logger
         raise
 
 # --- Path Helper (Crucial for consistency) ---
@@ -47,132 +61,180 @@ def _get_vector_store_paths(index_name: str, use_gcs: bool):
     pkl_file_name = f"{index_name}.pkl"
 
     if use_gcs:
-        # GCS keys include index_name as a subdirectory
-        # Use settings.GS_FAISS_PREFIX for the top-level folder in GCS
         gcs_base_prefix = getattr(settings, "GS_FAISS_PREFIX", "faiss_indices/")
-        faiss_key = f"{gcs_base_prefix}{index_name}/{faiss_file_name}"
-        pkl_key = f"{gcs_base_prefix}{index_name}/{pkl_file_name}"
+        faiss_key = Path(f"{gcs_base_prefix}{index_name}/{faiss_file_name}") # Use Path for consistency
+        pkl_key = Path(f"{gcs_base_prefix}{index_name}/{pkl_file_name}") # Use Path for consistency
         return faiss_key, pkl_key
     else:
-        # Local paths relative to BASE_DIR and into 'faiss_data' directory
-        local_base_dir = settings.BASE_DIR / "faiss_data"
+        local_base_dir = Path(settings.BASE_DIR) / "faiss_data" # Use Path for BASE_DIR
         subdir = local_base_dir / index_name
         return subdir / faiss_file_name, subdir / pkl_file_name
 
-# --- embed_and_store (Modified to use _get_vector_store_paths) ---
-def embed_and_store(chunks, index_name, model):
-    if not isinstance(chunks, list) or not all(isinstance(c, str) for c in chunks):
-        print("Error: 'chunks' must be a list of strings")
-        return
+# --- embed_and_store (MODIFIED for Multi-File/Text Splitting) ---
+def embed_and_store(all_extracted_texts: list[str], index_name: str, model): # Renamed 'chunks' to 'all_extracted_texts'
+    """
+    Combines text from multiple sources, splits into chunks, embeds, and stores in FAISS.
+    Args:
+        all_extracted_texts: A list of strings, where each string is text from one source file.
+        index_name: Name for the FAISS index.
+        model: Your HuggingFace/Gemini embedding model instance (e.g., from embedding_service.py).
+               Assumes model.encode(list_of_strings) returns list of embeddings.
+    """
+    if not isinstance(all_extracted_texts, list) or not all(isinstance(t, str) for t in all_extracted_texts):
+        logger.error("Error: 'all_extracted_texts' must be a list of strings.") # Use logger
+        return # Or raise appropriate error
 
-    # Ensure chunks are not empty to avoid issues with model.encode
+    # 1. Combine all texts into a single corpus
+    combined_text = "\n\n".join(all_extracted_texts)
+
+    # 2. Text Splitting
+    if not combined_text.strip():
+        logger.warning(f"Combined text for index {index_name} is empty. No embeddings will be created.") # Use logger
+        return # No content to split/embed
+
+    chunks = [] # This will be the list of smaller text chunks
+    if RecursiveCharacterTextSplitter:
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, # Adjust as needed
+            chunk_overlap=200, # Adjust as needed
+            length_function=len,
+            add_start_index=True,
+        )
+        # LangChain text splitter expects a list of Document objects or strings
+        # If you want to retain metadata per chunk, you'd make Document objects with metadata
+        # For simplicity, passing combined text directly for splitting
+        chunks = text_splitter.split_text(combined_text) # Use split_text for string input
+    else:
+        # Fallback if LangChain is not installed: simple splitting by paragraph/line
+        # This is very basic, consider installing langchain-text-splitters
+        chunks = [c.strip() for c in combined_text.split('\n\n') if c.strip()]
+        if not chunks: # If simple split yields nothing
+            chunks = [combined_text] # Use the whole text as one chunk
+
     if not chunks:
-        print("Warning: Chunks list is empty. No embeddings will be created.")
+        logger.warning(f"No text chunks generated for index {index_name} after splitting.") # Use logger
         return
 
-    embeddings = np.array(model.encode(chunks)).astype("float32")
+    # 3. Embedding
+    try:
+        # model.encode expects a list of strings and returns embeddings
+        embeddings = np.array(model.encode(chunks)).astype("float32")
+    except Exception as e:
+        logger.error(f"Error encoding text chunks for index {index_name}: {e}", exc_info=True) # Use logger
+        return # Or raise appropriate error
 
     if embeddings.shape[0] == 0:
-        print("Warning: No embeddings created from chunks after encoding.")
+        logger.warning(f"No embeddings created from chunks for index {index_name}.") # Use logger
         return
 
+    # 4. FAISS Indexing
     dim = embeddings.shape[1]
     index = faiss.IndexFlatL2(dim)
     index.add(embeddings)
-    print(f"FAISS index created for {index_name} with {index.ntotal} vectors.")
+    logger.info(f"FAISS index created for {index_name} with {index.ntotal} vectors from {len(chunks)} chunks.") # Use logger
 
     use_gcs = getattr(settings, "USE_GCS", False)
     faiss_path, pkl_path = _get_vector_store_paths(index_name, use_gcs)
 
+    # 5. Save to Local or GCS
     if use_gcs:
         bucket_name = getattr(settings, "GS_BUCKET_NAME", None)
         if not bucket_name:
+            logger.error("GS_BUCKET_NAME must be set in settings for GCS operations.") # Use logger
             raise ValueError("GS_BUCKET_NAME must be set in settings for GCS operations.")
 
         # Use temporary files for GCS upload/download
         with tempfile.TemporaryDirectory() as tmpdir:
-            local_faiss_temp = os.path.join(tmpdir, f"{index_name}.faiss")
-            local_pkl_temp = os.path.join(tmpdir, f"{index_name}.pkl")
+            local_faiss_temp = os.path.join(tmpdir, faiss_path.name) # Use Path.name for just filename
+            local_pkl_temp = os.path.join(tmpdir, pkl_path.name)
 
             faiss.write_index(index, local_faiss_temp)
             with open(local_pkl_temp, "wb") as f:
-                pickle.dump(chunks, f)
+                pickle.dump(chunks, f) # Store the actual text chunks
 
             _upload_blob(bucket_name, local_faiss_temp, str(faiss_path))
             _upload_blob(bucket_name, local_pkl_temp, str(pkl_path))
-            print(f"FAISS index and chunks saved to GCS: {faiss_path}, {pkl_path}")
+            logger.info(f"FAISS index and chunks saved to GCS: {faiss_path}, {pkl_path}") # Use logger
     else:
-        # Local paths are PurePath objects, convert to string for os.makedirs, open, faiss.write_index
+        # Local paths are Path objects, ensure parent directory exists
         os.makedirs(faiss_path.parent, exist_ok=True)
 
         faiss.write_index(index, str(faiss_path))
         with open(str(pkl_path), "wb") as f:
-            pickle.dump(chunks, f)
-        print(f"FAISS index and chunks saved locally at {faiss_path.parent}/")
+            pickle.dump(chunks, f) # Store the actual text chunks
+        logger.info(f"FAISS index and chunks saved locally at {faiss_path.parent}/") # Use logger
 
 
-# --- search_similar_chunks (Modified to use _get_vector_store_paths) ---
-def search_similar_chunks(query, index_name, model, top_k=1):
+# --- search_similar_chunks (MODIFIED to use _get_vector_store_paths and proper loading) ---
+def search_similar_chunks(query: str, index_name: str, model, top_k: int = 3): # Added type hints, top_k default
     use_gcs = getattr(settings, "USE_GCS", False)
     faiss_file_path, pkl_file_path = _get_vector_store_paths(index_name, use_gcs)
 
     index = None
-    texts = None
+    chunks_text = None # Renamed 'texts' to 'chunks_text' for clarity, as these are the smaller chunks
 
     if use_gcs:
         bucket_name = getattr(settings, "GS_BUCKET_NAME", None)
         if not bucket_name:
-            print("Error: GS_BUCKET_NAME not set for GCS operations.")
+            logger.error("GS_BUCKET_NAME not set for GCS operations.") # Use logger
             return ["Error retrieving knowledge base."]
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            local_faiss_temp = os.path.join(tmpdir, f"{index_name}.faiss")
-            local_pkl_temp = os.path.join(tmpdir, f"{index_name}.pkl")
+            local_faiss_temp = os.path.join(tmpdir, faiss_file_path.name)
+            local_pkl_temp = os.path.join(tmpdir, pkl_file_path.name)
             
             try:
                 _download_blob(bucket_name, str(faiss_file_path), local_faiss_temp)
                 _download_blob(bucket_name, str(pkl_file_path), local_pkl_temp)
             except Exception as e:
-                print(f"Error downloading FAISS files from GCS: {e}")
+                logger.error(f"Error downloading FAISS files from GCS: {e}", exc_info=True) # Use logger
                 return ["Knowledge base not found or error accessing cloud storage."]
 
             try:
                 index = faiss.read_index(local_faiss_temp)
                 with open(local_pkl_temp, "rb") as f:
-                    texts = pickle.load(f)
+                    chunks_text = pickle.load(f) # Load the chunks
             except Exception as e:
-                print(f"Error loading FAISS files from temporary paths: {e}")
+                logger.error(f"Error loading FAISS files from temporary paths: {e}", exc_info=True) # Use logger
                 return ["Error processing knowledge base data."]
     else:
         if not faiss_file_path.exists() or not pkl_file_path.exists():
-            print(f"FAISS index or chunks not found locally at {faiss_file_path.parent}")
+            logger.warning(f"FAISS index or chunks not found locally at {faiss_file_path.parent}") # Use logger
             return ["Knowledge base not found or not embedded."]
         
         try:
             index = faiss.read_index(str(faiss_file_path))
             with open(str(pkl_file_path), "rb") as f:
-                texts = pickle.load(f)
+                chunks_text = pickle.load(f) # Load the chunks
         except Exception as e:
-            print(f"Error loading FAISS files from local paths: {e}")
+            logger.error(f"Error loading FAISS files from local paths: {e}", exc_info=True) # Use logger
             return ["Error processing knowledge base data."]
 
-    if index is None or texts is None or not texts:
+    if index is None or chunks_text is None or not chunks_text:
+        logger.warning(f"No data loaded from FAISS for index {index_name}.") # Use logger
         return ["No data in knowledge base."]
 
-    query_vec = model.encode([query]).astype("float32")
+    # Encode query for search
+    try:
+        query_vec = model.encode([query]).astype("float32")
+    except Exception as e:
+        logger.error(f"Error encoding query '{query}' for FAISS search: {e}", exc_info=True)
+        return ["Error processing your query."]
+
 
     if index.ntotal == 0:
+        logger.warning(f"FAISS index {index_name} is empty (0 vectors).") # Use logger
         return ["Knowledge base is empty."]
 
     actual_top_k = min(top_k, index.ntotal)
     D, I = index.search(query_vec, actual_top_k)
     
-    # Ensure indices 'I' are valid before accessing 'texts'
-    results = [texts[i] for i in I[0] if i >= 0 and i < len(texts)]
+    # Ensure indices 'I' are valid before accessing 'chunks_text'
+    results = [chunks_text[i] for i in I[0] if i >= 0 and i < len(chunks_text)]
 
     return results if results else ["No relevant results found."]
 
-# --- delete_vector_store (Crucially fixed to use _get_vector_store_paths) ---
+# --- delete_vector_store (Logging and robustness improvements) ---
 def delete_vector_store(index_name: str):
     """Deletes both FAISS index and chunk file from GCS or local disk based on storage mode."""
     use_gcs = getattr(settings, "USE_GCS", False)
@@ -182,41 +244,41 @@ def delete_vector_store(index_name: str):
         client = _get_gcs_client()
         bucket_name = getattr(settings, "GS_BUCKET_NAME", None)
         if not bucket_name:
-            print("Error: GS_BUCKET_NAME not set for GCS operations. Cannot delete remote files.")
+            logger.error("GS_BUCKET_NAME not set for GCS operations. Cannot delete remote files.") # Use logger
             return # Or raise an error to indicate critical failure
         bucket = client.bucket(bucket_name)
 
-        # The GCS paths are the full blob keys generated by _get_vector_store_paths
         for blob_key in [str(faiss_file_path), str(pkl_file_path)]:
             try:
                 blob = bucket.blob(blob_key)
-                if blob.exists(): # Check if blob exists before trying to delete
+                if blob.exists():
                     blob.delete()
-                    print(f"Deleted GCS blob: gs://{bucket_name}/{blob_key}")
+                    logger.info(f"Deleted GCS blob: gs://{bucket_name}/{blob_key}") # Use logger
                 else:
-                    print(f"GCS blob not found (skipping deletion): {blob_key}")
+                    logger.warning(f"GCS blob not found (skipping deletion): {blob_key}") # Use logger
             except Exception as e:
-                print(f"Failed to delete GCS blob {blob_key}: {e}")
-                # Log this error but don't stop the process if other file exists.
+                logger.error(f"Failed to delete GCS blob {blob_key}: {e}", exc_info=True) # Use logger
     else:
-        # Local paths are Path objects from _get_vector_store_paths
-        parent_dir = faiss_file_path.parent # Get the directory Path object
+        parent_dir = faiss_file_path.parent
         
-        for local_file_path in [faiss_file_path, pkl_file_path]:
-            if local_file_path.exists():
-                try:
-                    os.remove(str(local_file_path)) # Convert Path object to string for os.remove
-                    print(f"Deleted local file: {local_file_path}")
-                except OSError as e:
-                    print(f"Failed to delete local file {local_file_path}: {e}")
-            else:
-                print(f"Local file not found (skipping deletion): {local_file_path}")
+        # Check if the parent directory exists before iterating over files
+        if parent_dir.exists():
+            for local_file_path in [faiss_file_path, pkl_file_path]:
+                if local_file_path.exists():
+                    try:
+                        os.remove(str(local_file_path))
+                        logger.info(f"Deleted local file: {local_file_path}") # Use logger
+                    except OSError as e:
+                        logger.error(f"Failed to delete local file {local_file_path}: {e}", exc_info=True) # Use logger
+                else:
+                    logger.warning(f"Local file not found (skipping deletion): {local_file_path}") # Use logger
 
-        # After deleting files, attempt to remove the empty subdirectory
-        # Check if the parent directory still exists and is empty
-        if parent_dir.exists() and not os.listdir(parent_dir):
-            try:
-                os.rmdir(str(parent_dir)) # Convert Path object to string for os.rmdir
-                print(f"Deleted empty local directory: {parent_dir}")
-            except OSError as e:
-                print(f"Failed to delete empty directory {parent_dir}: {e}")
+            # After deleting files, attempt to remove the empty subdirectory
+            if parent_dir.exists() and not os.listdir(parent_dir):
+                try:
+                    os.rmdir(str(parent_dir))
+                    logger.info(f"Deleted empty local directory: {parent_dir}") # Use logger
+                except OSError as e:
+                    logger.error(f"Failed to delete empty directory {parent_dir}: {e}", exc_info=True) # Use logger
+        else:
+            logger.warning(f"Local FAISS directory not found at {parent_dir} for deletion.") # Use logger

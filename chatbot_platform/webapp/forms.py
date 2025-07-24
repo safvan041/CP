@@ -10,9 +10,16 @@ from django.contrib.auth.hashers import make_password # NEW: For manually hashin
 
 
 class KnowledgeBaseForm(forms.ModelForm):
+
+    # files = forms.FileField(
+        
+    #     label="Upload Source Files",
+    #     help_text="Select one or more .txt, .pdf, or .docx files."
+    # )
+
     class Meta:
         model = KnowledgeBase
-        fields = ['title', 'file']
+        fields = ['title'] 
 
     def clean_file(self):
         file = self.cleaned_data.get('file')

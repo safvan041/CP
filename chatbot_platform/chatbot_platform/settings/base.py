@@ -141,6 +141,17 @@ else:
         }
     }
 
+# Celery Configuration
+# Broker: Where Celery sends and receives tasks
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# Backend: Where Celery stores task results (optional, but good for tracking)
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata' # Set to your local timezone or 'UTC'
+
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

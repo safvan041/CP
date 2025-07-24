@@ -17,7 +17,6 @@
         </nav>
     </header>
 
-    <!-- Message Display Area -->
     <div class="message-container">
         {% if messages %}
             <ul class="messages">
@@ -28,7 +27,6 @@
         {% endif %}
     </div>
 
-    <!-- Main Content -->
     <main>
         <div class="hero">
             <h1>Upload Knowledge Base</h1>
@@ -37,30 +35,46 @@
 
         <div class="upload-card">
             <h2>Upload a File</h2>
-            <form method="post" enctype="multipart/form-data">
+            <form id="upload-form"> 
                 {% csrf_token %}
 
-                <!-- Render form fields manually for better styling control -->
-                {% for field in form %}
-                    <div class="form-group">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.help_text %}
-                            <small class="help-text">{{ field.help_text }}</small>
-                        {% endif %}
-                        {% for error in field.errors %}
-                            <p class="error-text">{{ error }}</p>
+                {% if form.non_field_errors %}
+                    <ul class="errorlist">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
                         {% endfor %}
-                    </div>
-                {% endfor %}
+                    </ul>
+                {% endif %}
 
-                <button type="submit">Upload</button>
+                <div class="form-group">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                    {% if form.title.help_text %}
+                        <small class="help-text">{{ form.title.help_text }}</small>
+                    {% endif %}
+                    {% for error in form.title.errors %}
+                        <p class="error-text">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {# REMOVED: The entire form-group for form.files #}
+                {# It will be rendered manually in JS, not by Django form #}
+                <div class="form-group">
+                    <label for="id_files">Upload Source Files</label> 
+                    <input type="file" name="files" id="id_files" multiple required> {# Keep this HTML input directly #}
+                    {# NO Django form.files.errors or help_text here. Handled by JS. #}
+                </div>
+
+                <button type="submit" id="submit-upload-btn">Upload</button>
             </form>
         </div>
     </main>
 
-    <!-- Footer -->
     <footer>
         &copy; {{ year|default:2025 }} CAPI Studio. All rights reserved.
     </footer>
 {% endblock content %}
+
+{% block extra_js %}
+    <script src="{% static 'js/home_upload.js' %}"></script>
+{% endblock extra_js %}

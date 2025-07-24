@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background: linear-gradient(to right, #add8e6, #00008b);
+    background: linear-gradient(to right, #add8e6, #00008b); /* Your gradient */
     color: #1e293b;
     min-height: 100vh;
     display: flex;
@@ -56,7 +56,19 @@ h2 {
     font-size: 300%;
     font-weight: 600;
     margin-bottom: 24px;
-    color: #ffffff;
+    color: #ffffff; /* Assuming white text on your gradient background */
+}
+
+.message-container {
+    padding: 0 20px; /* Adjust as needed to align with main content */
+    max-width: 1000px;
+    margin: 0 auto; /* Center the message container */
+}
+
+.messages {
+    list-style: none; /* Remove default list styling */
+    padding: 0;
+    margin-bottom: 20px;
 }
 
 .message {
@@ -65,9 +77,9 @@ h2 {
     border-radius: 5px;
     /* Define a default style for all messages */
     background-color: #f0f0f0;
-    /* Soft gray default */
     color: #333;
     border: 1px solid #ccc;
+    font-size: 1rem; /* Added explicit font size */
 }
 
 .message.success {
@@ -94,8 +106,33 @@ h2 {
     border: 1px solid #ffeeba;
 }
 
+/* New Status Badge Styles */
+.status-badge {
+    padding: 0.25em 0.75em; /* Slightly larger padding for better appearance */
+    border-radius: 0.25rem;
+    font-size: 0.9em; /* Slightly larger font size */
+    font-weight: 600; /* Medium-bold */
+    color: #fff;
+    display: inline-block; /* Ensures padding and background apply correctly */
+    min-width: 80px; /* Give it a minimum width for consistency */
+    text-align: center;
+}
+.status-uploaded { background-color: #6c757d; } /* Grey */
+.status-processing { background-color: #17a2b8; } /* Info Blue */
+.status-completed { background-color: #28a745; } /* Green */
+.status-failed { background-color: #dc3545; }    /* Red */
+
+.error-message {
+    color: #dc3545; /* Red for error messages */
+    font-size: 0.9em;
+    margin-top: 5px;
+    word-wrap: break-word; /* Ensure long error messages wrap */
+}
+
+
 .knowledge-base-list {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
 }
 
@@ -105,6 +142,9 @@ h2 {
     padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex; /* Make it a flex container */
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Push buttons to bottom */
 }
 
 .knowledge-base-item:hover {
@@ -114,20 +154,30 @@ h2 {
 
 .knowledge-base-item p {
     margin-bottom: 8px;
-    font-size: 25px;
+    font-size: 1.1rem; /* Adjusted for better readability */
+    color: #334155; /* Darker text for readability on white card */
 }
+.knowledge-base-item p strong {
+    color: #1e293b; /* Even darker for strong tags */
+}
+
 
 .knowledge-base-item a {
-    color: #ffffff;
-    font-weight: 700;
+    /* This might be overly broad. Consider being more specific for links within buttons. */
+    /* If you mean links outside buttons, define that separately. */
+    color: white; /* Inherit color from parent for general links */
+    font-weight: inherit;
+    text-decoration: none; /* Remove underline by default */
 }
 
+
 .buttons {
-    margin-top: 16px;
+    margin-top: auto; /* Push buttons to the bottom of the flex item */
+    padding-top: 16px; /* Add some space above buttons */
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    color: black;
+    align-items: center; /* Align buttons vertically */
 }
 
 .btn {
@@ -137,31 +187,64 @@ h2 {
     border-radius: 6px;
     cursor: pointer;
     text-decoration: none;
-    color: white;
+    color: white; /* Default button text color */
     font-weight: 600;
     transition: background-color 0.3s ease;
+    white-space: nowrap; /* Prevent button text from wrapping */
 }
 
 .btn-proceed {
     background: linear-gradient(to left, #00008b, #4b0082);
 }
+.btn-proceed:hover {
+    background: linear-gradient(to left, #00006b, #3a0062);
+}
+
 
 .btn-test {
     background: linear-gradient(to left, #add8e6, #00008b);
     color: white;
 }
+.btn-test:hover {
+    background: linear-gradient(to left, #8cbbe6, #00006b);
+}
+
 
 .btn-api {
-    background-color: #10b981;
+    background-color: #10b981; /* Tailwind 'emerald-500' */
 }
-.btn-danger{
-    background-color: #ef4444;
-    color: white;
+.btn-api:hover {
+    background-color: #059669; /* Tailwind 'emerald-600' */
 }
 
-.btn-api:hover {
-    background-color: #059669;
+.btn-danger{
+    background-color: #ef4444; /* Tailwind 'red-500' */
+    color: white;
 }
+.btn-danger:hover{
+    background-color: #dc2626; /* Tailwind 'red-600' */
+}
+
+/* New button for processing status */
+.btn-processing {
+    background-color: #6d6e71; /* A darker grey/silver to indicate disabled/in-progress */
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+.btn-processing:hover {
+    background-color: #6d6e71; /* No change on hover for disabled button */
+}
+
+/* New button for copy code in modal */
+.btn-primary { /* Using a generic primary class for copy button */
+    background-color: #007bff; /* Blue */
+    color: white;
+    margin-right: 10px; /* Space from close button */
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
 
 footer {
     text-align: center;
@@ -176,6 +259,9 @@ footer {
         padding: 8px 12px;
         margin-left: 8px;
     }
+    .btn {
+        flex-grow: 1; /* Make buttons fill available width on small screens */
+    }
 }
 
 .no-kbs-message {
@@ -188,7 +274,7 @@ footer {
 }
 
 
-/* Styles for the Modal */
+/* Styles for the Modal - Integrated from your previous inline styles */
 .modal-overlay {
     display: none; /* Initially hidden */
     position: fixed;
@@ -197,7 +283,7 @@ footer {
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.6);
-    z-index: 9999;
+    z-index: 9999; /* Higher z-index to ensure it's on top */
     align-items: center;
     justify-content: center;
 }
@@ -212,11 +298,13 @@ footer {
 }
 .modal-content h3 {
     margin-top: 0;
+    margin-bottom: 15px; /* Added spacing */
 }
 .modal-content textarea {
     width: 100%;
     height: 100px;
     margin-top: 10px;
+    margin-bottom: 15px; /* Added spacing below textarea */
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 4px;
@@ -224,8 +312,12 @@ footer {
     font-family: monospace;
     resize: vertical;
 }
-.btn-close {
-    margin-top: 10px;
+/* Ensure modal buttons have proper spacing */
+.modal-content .btn {
+    display: inline-block; /* Make sure buttons are inline for horizontal layout */
+    margin-right: 10px; /* Space between buttons */
+}
+.btn-close { /* Already defined, but ensure it aligns well */
     background: #ef4444;
     color: white;
 }
