@@ -1,0 +1,1 @@
+web : chatbot_platform.wsgi
