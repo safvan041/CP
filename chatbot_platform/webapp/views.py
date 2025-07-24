@@ -342,7 +342,7 @@ def chat_api_view(request, widget_slug):
 
             # Generate LLM response
             # Note: generate_genai_response expects chat_history, so pass empty list or None
-            response_content = generate_genai_response(context, user_message, chat_history=None)
+            response_content = generate_genai_response(context, user_message)
             logger.info(f"Chatbot response for '{user_message}': {response_content[:100]}...")
 
             return JsonResponse({'response': response_content})
