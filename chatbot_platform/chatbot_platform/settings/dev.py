@@ -29,7 +29,3 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     "http://127.0.0.1:8000",
 ]
-
-CORS_TRUSTED_ORIGINS = [ 
-    'https://chatbot-api-platform-29773676777.us-central1.run.app', 
-]
