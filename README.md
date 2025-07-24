@@ -44,20 +44,20 @@ cd chatbot-platform
 
 #do not push anything on main#
 
-# Step 1: Ensure you're on latest branch
-git checkout fix-deploy
+# Step 1: Ensure you're on latest branch, this is for dev branch, perform all the operations on this branch, then mrege it on fix-deploy-test.
+git checkout fix-deploy-dev
 
 # Step 2: Pull the latest updates
-git pull origin fix-deploy
+git pull origin fix-deploy-dev
 
 # Step 3: Create a new feature branch
-git checkout -b your-feature-branch-name
+git checkout -b IMP-00..-name-of-your-branch
 
 # Step 4: Confirm current branch
 git branch
 
 # Step 5: Push to GitHub
-git push -u origin your-feature-branch-name
+git push -u origin IMP-00..-name-of-your-branch
 
 ------------------------------
 ▶️ Run the Project Locally
