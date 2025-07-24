@@ -5,7 +5,6 @@ ALLOWED_HOSTS = [
     'chatbot-api-platform-29773676777.us-central1.run.app',
     'localhost',
     '127.0.0.1',
-    'capi-studio.onrender.com',
 ]
 
 
