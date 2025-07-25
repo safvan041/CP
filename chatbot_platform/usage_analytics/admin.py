@@ -2,6 +2,7 @@
 
 from django.contrib import admin
 from .models import ChatbotUsage # Import the ChatbotUsage model
+from core.models import KnowledgeBase # Also import KnowledgeBase if needed for filters/search that cross models
 
 @admin.register(ChatbotUsage)
 class ChatbotUsageAdmin(admin.ModelAdmin):
@@ -25,8 +26,6 @@ class ChatbotUsageAdmin(admin.ModelAdmin):
     )
     ordering = ('-updated_at',) # Default order by most recently updated usage stats
 
-    # Custom method to display the KnowledgeBase title in list_display
-    # This retrieves the title from the related KnowledgeBase object
     def knowledge_base_title(self, obj):
         return obj.knowledge_base.title
-    knowledge_base_title.short_description = 'Knowledge Base' # Sets the column header in admin
+    knowledge_base_title.short_description = 'Knowledge Base'
