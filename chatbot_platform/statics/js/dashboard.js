@@ -59,13 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusBadge = document.getElementById(`kb-status-${kbId}`);
         const buttonsDiv = document.getElementById(`kb-buttons-${kbId}`);
         const errorMsgP = document.getElementById(`kb-error-${kbId}`);
+        const messagesSentSpan = document.getElementById(`kb-messages-sent-${kbId}`);
+        const lastMessageAtSpan = document.getElementById(`kb-last-message-at-${kbId}`);
+
 
         // 1. Update status badge
         if (statusBadge) {
             statusBadge.textContent = statusData.status_display;
-            statusBadge.className = 'status-badge'; // Reset classes
-            statusBadge.classList.add(`status-${statusData.status}`); // Add new status class
-            kbElement.dataset.kbStatus = statusData.status; // IMPORTANT: Update dataset status for next poll cycle
+            statusBadge.className = 'status-badge'; 
+            statusBadge.classList.add(`status-${statusData.status}`); 
+            kbElement.dataset.kbStatus = statusData.status; 
             console.log(`KB ${kbId} badge updated to: ${statusData.status_display} (Dataset: ${kbElement.dataset.kbStatus}).`);
         } else {
             console.warn(`KB ${kbId} statusBadge element not found!`);
@@ -75,15 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // 2. Update buttons based on status
         if (buttonsDiv) {
             let newButtonsHtml = '';
-            // Get CSRF token from a hidden input in the existing delete form (assuming it's the first one on page)
             const csrfTokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
             const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
 
-            // Safely get KB Title for delete button confirmation
             const kbTitleElement = kbElement.querySelector('.card-title');
             const kbTitle = kbTitleElement ? kbTitleElement.textContent.trim() : 'this Knowledge Base';
-            console.log(`KB ${kbId} title for delete confirmation: '${kbTitle}'.`);
-
 
             if (statusData.status === 'uploaded' || statusData.status === 'failed') {
                 newButtonsHtml = `<a href="/proceed/${kbId}/" class="btn btn-proceed" onclick="this.classList.add('disable'); this.innerText='Starting...'">Proceed & Embed</a>`;
@@ -98,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button class="btn btn-api" onclick="showEmbedModal('${widgetSlug}', '${chatWidgetBaseUrl}')">Get Widget API</button>
                 `;
             }
-            // Reconstruct the delete button form always
             const deleteFormHtml = `
                 <form action="/delete/${kbId}/" method="post" class="ms-auto"
                     onsubmit="return confirm('Are you sure you want to delete this Knowledge Base: \\'${kbTitle}\\'? This action cannot be undone.');">
@@ -106,9 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             `;
-            // Set innerHTML to update buttons
             buttonsDiv.innerHTML = newButtonsHtml + deleteFormHtml;
-            console.log(`KB ${kbId} buttons updated to reflect status: ${statusData.status}.`);
+            console.log(`KB ${kbId} buttons updated for status: ${statusData.status}.`);
         } else {
             console.warn(`KB ${kbId} buttonsDiv element not found!`);
         }
@@ -126,6 +123,24 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             console.warn(`KB ${kbId} errorMsgP element not found!`);
         }
+
+        // --- NEW: Update Usage Stats ---
+        // These fields might not exist on the base fix-deploy-dev branch's KB model yet
+        if (messagesSentSpan) {
+            messagesSentSpan.textContent = statusData.total_messages_sent;
+            console.log(`KB ${kbId} messages sent updated to: ${statusData.total_messages_sent}.`);
+        }
+        if (lastMessageAtSpan) {
+            if (statusData.last_message_at) {
+                const date = new Date(statusData.last_message_at);
+                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                lastMessageAtSpan.textContent = date.toLocaleDateString(undefined, options);
+            } else {
+                lastMessageAtSpan.textContent = 'Never';
+            }
+            console.log(`KB ${kbId} last message at updated to: ${statusData.last_message_at || 'Never'}.`);
+        }
+        // --- END NEW USAGE STATS ---
     }
 
     async function pollKbStatus(kbElement) {
@@ -140,26 +155,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`API response for KB ${kbId}:`, data);
 
                 if (response.ok) {
-                    // Check if status has actually changed from the last known state
                     if (kbElement.dataset.kbStatus !== data.status) {
                         console.log(`KB ${kbId} status change detected: ${kbElement.dataset.kbStatus} -> ${data.status}. Updating UI.`);
-                        updateKbCard(kbElement, data); // Update the UI
                     } else {
                         console.log(`KB ${kbId} status is still ${data.status}. No UI update needed.`);
                     }
-                    
-                    // Stop polling if status is completed or failed
+                    updateKbCard(kbElement, data); // Update the UI
+
                     if (data.status === 'completed' || data.status === 'failed') {
                         clearInterval(activePolls[kbId]);
                         delete activePolls[kbId];
                         console.log(`Polling stopped for KB ${kbId}. Final Status: ${data.status}.`);
                         
-                        // Show a success/error message on the main message container
                         const mainMessagesDiv = document.querySelector('.message-container .messages');
                         if (mainMessagesDiv) {
-                            // Select specific li by data-kb-id to prevent duplicates
                             const existingMsg = mainMessagesDiv.querySelector(`li[data-kb-id="${kbId}"]`); 
-                            if (!existingMsg) { // Only add if not already present
+                            if (!existingMsg) { 
                                 const kbTitle = kbElement.querySelector('.card-title').textContent; 
                                 if (data.status === 'completed') {
                                     mainMessagesDiv.innerHTML += `<li class="message success" data-kb-id="${kbId}">Knowledge Base '${kbTitle}' embedded successfully!</li>`;
@@ -178,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error(`Network error during polling for KB ${kbId}:`, error);
             }
         } else {
-            // If KB is already completed or not in a polling state, ensure its polling is stopped
             if (activePolls[kbId]) {
                 clearInterval(activePolls[kbId]);
                 delete activePolls[kbId];

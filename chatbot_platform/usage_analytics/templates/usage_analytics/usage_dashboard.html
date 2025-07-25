@@ -46,11 +46,11 @@
                         {% if kb.usage_stats %} 
                             <p class="card-text"><strong>Total Messages:</strong> {{ kb.usage_stats.total_messages_sent }}</p>
                             {% if kb.usage_stats.last_message_at %}
-                                <p class="card-text"><strong>Last Message:</strong> {{ kb.usage_stats.last_message_at|date:"F d, Y, P H:i" }}</p>
+                                <p class="card-text"><strong>Last Message:</strong> {{ kb.usage_stats.last_message_at|date:"F d, Y, P " }}</p>
                             {% else %}
                                 <p class="card-text"><strong>Last Message:</strong> Never</p>
                             {% endif %}
-                            <p class="card-text"><small>Updated: {{ kb.usage_stats.updated_at|date:"F d, Y, P H:i" }}</small></p>
+                            <p class="card-text"><small>Updated: {{ kb.usage_stats.updated_at|date:"F d, Y, P " }}</small></p>
                         {% else %}
                             <p class="card-text no-usage-data">No usage data yet for this chatbot. Start chatting!</p>
                         {% endif %}
