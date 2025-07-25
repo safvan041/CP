@@ -8,9 +8,7 @@
 {% endblock extra_head %}
 
 {% block auth_content %}
-    <h2>Sign Up</h2>
-    <p class="auth-intro">Create your account to get started!</p>
-
+    
     {% if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -22,6 +20,9 @@
     {% endif %}
 
     <div class="auth-card">
+        <h2>Sign Up</h2>
+        <p class="auth-intro">Create your account to get started!</p>
+
         <form method="post">
             {% csrf_token %}
 

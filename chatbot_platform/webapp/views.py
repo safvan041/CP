@@ -14,9 +14,12 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.http import QueryDict
+from django.db.models import F # For atomic updates
+from django.utils import timezone # For timestamps
 
 
 from webapp.forms import KnowledgeBaseForm, CustomUserCreationForm
+from usage_analytics.models import ChatbotUsage
 from core.models import KnowledgeBase
 
 # Standard utility imports
@@ -320,12 +323,12 @@ def chat_widget_view(request, widget_slug):
 @csrf_exempt
 def chat_api_view(request, widget_slug):
     """
-    Handles chat messages from the widget, performs RAG, and gets LLM response.
-    This remains stateless for now (no history management).
+    Handles chat messages from the widget, performs RAG, gets LLM response,
+    and now tracks usage.
     """
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            data = json.loads(request.body.decode('utf-8'))
             user_message = data.get('message', '').strip()
 
             if not user_message:
@@ -335,15 +338,31 @@ def chat_api_view(request, widget_slug):
             model = get_embedding_model()
             index_name = f"kb_{kb.id}"
 
-            # Perform RAG (Retrieval Augmented Generation)
             results = search_similar_chunks(user_message, index_name, model, top_k=3)
             context = "\n".join(results) if results else "No relevant information found."
             logger.debug(f"Retrieved context for '{user_message}': {context[:100]}...")
 
-            # Generate LLM response
             # Note: generate_genai_response expects chat_history, so pass empty list or None
             response_content = generate_genai_response(context, user_message)
             logger.info(f"Chatbot response for '{user_message}': {response_content[:100]}...")
+
+            # --- NEW: USAGE TRACKING (with ChatbotUsage model) ---
+            # Get or create the ChatbotUsage record for this KB
+            usage_stats, created = ChatbotUsage.objects.get_or_create(
+                knowledge_base=kb, # Links to KnowledgeBase
+                defaults={
+                    'total_messages_sent': 0, # Initial value for new record
+                    'last_message_at': timezone.now()
+                }
+            )
+            # Atomically increment total_messages_sent and update last_message_at
+            usage_stats.total_messages_sent = F('total_messages_sent') + 1
+            usage_stats.last_message_at = timezone.now()
+            usage_stats.save(update_fields=['total_messages_sent', 'last_message_at'])
+
+            usage_stats.refresh_from_db()
+            logger.info(f"Usage for KB '{kb.title}' (ID: {kb.id}): message count incremented to {usage_stats.total_messages_sent}.")
+            # --- END NEW USAGE TRACKING ---
 
             return JsonResponse({'response': response_content})
 
@@ -352,7 +371,7 @@ def chat_api_view(request, widget_slug):
             return JsonResponse({'error': 'Chatbot not found.'}, status=404)
         except json.JSONDecodeError:
             logger.error("Chat API: Invalid JSON in request body.", exc_info=True)
-            return JsonResponse({'error': 'Invalid request body.'}, status=400)
+            return JsonResponse({'error': 'Invalid JSON payload.'}, status=400)
         except Exception as e:
             logger.error(f"Chat API: An unexpected error occurred for widget {widget_slug}: {e}", exc_info=True)
             return JsonResponse({'error': 'An internal error occurred. Please try again.'}, status=500)

@@ -8,8 +8,9 @@ from django.shortcuts import redirect
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", lambda request: redirect("login")),  # Optional redirect to login page
-    path("", include("webapp.urls")),             # Include webapp views instead of core
+    path("", lambda request: redirect("login")), 
+    path("", include("webapp.urls")),            
+    path('usage/', include('usage_analytics.urls', namespace='usage_analytics')),
 ]
 
 # Serve uploaded media files in development

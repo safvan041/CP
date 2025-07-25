@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'webapp',
     'storages',
     'axes',
+    'usage_analytics',
 ]
 
 MIDDLEWARE = [
