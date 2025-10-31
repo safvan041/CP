@@ -103,7 +103,7 @@ gcloud builds submit --config cloudbuild.yaml
 📬 Contact
 ------------------------------
 
-For licensing or collaboration or if you get stuch with anything in the app, contact:
+For licensing or collaboration or if you get stuck with anything in the app, contact:
 
 Email: safwanbakkar.dev@hotmail.com  
 GitHub: https://github.com/safvan041
