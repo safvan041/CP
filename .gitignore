@@ -12,3 +12,6 @@ test1/
 media/
 faiss_data/
 vectorstore/
+.venv
+.venv/bin
+.venv/lib

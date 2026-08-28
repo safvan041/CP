@@ -21,15 +21,49 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'statics'),
 ]
 
-GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY").strip()
-HF_TOKEN = config("HF_TOKEN").strip()
+NVIDIA_API_KEY = config("NVIDIA_API_KEY").strip()
+NVIDIA_BASE_URL = config(
+    "NVIDIA_BASE_URL",
+    default="https://integrate.api.nvidia.com/v1",
+).strip()
+NVIDIA_CHAT_MODEL = config(
+    "NVIDIA_CHAT_MODEL",
+    default="Deepseek-v4-pro-0813",
+).strip()
+NVIDIA_EMBEDDING_MODEL = config(
+    "NVIDIA_EMBEDDING_MODEL",
+    default="nemotron-3-embed-1b",
+).strip()
+
+# === NVIDIA EMBEDDING-SPECIFIC CONFIGURATION (separate API key) ===
+NVIDIA_EMBEDDING_API_KEY = config(
+    "NVIDIA_EMBEDDING_API_KEY",
+    default=config("NVIDIA_API_KEY"),  # Fallback to chat API key if not specified
+).strip()
+NVIDIA_EMBEDDING_BASE_URL = config(
+    "NVIDIA_EMBEDDING_BASE_URL",
+    default=config("NVIDIA_BASE_URL"),  # Fallback to chat base URL if not specified
+).strip()
+MAX_KNOWLEDGE_BASE_SIZE = 50 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024
+# ====================================================================
 SECRET_KEY = config("SECRET_KEY", default="unset-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", default="True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",") if not DEBUG else []
 USE_X_FORWARDED_HOST = True 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = False 
+
+# === SESSION & CSRF COOKIE CONFIGURATION (Critical for Codespaces) ===
+SESSION_COOKIE_SECURE = False  # False for HTTP local dev, True for production HTTPS
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests but mitigate CSRF
+CSRF_COOKIE_SECURE = False  # False for HTTP local dev, True for production HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Must be False - JS needs to read CSRF token
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allow cross-site requests but mitigate CSRF
+CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'  # Header name for CSRF token in POST requests
+# ======================================================================== 
 
 
 # CORS_ALLOWED_ORIGINS = [
@@ -37,17 +71,16 @@ SESSION_COOKIE_SECURE = False
 # ]
 
 CORS_TRUSTED_ORIGINS = [ 
-    'https://chatbot-api-platform-29773676777.us-central1.run.app',
-    'https://*.app.github.dev',
-    'https://vigilant-pancake-5wq9xpv4p9vc4ggx-8000.app.github.dev',
+    'https://*.github.dev',
+    'https://improved-space-bassoon-7g9xp47r4752rjw5-8000.app.github.dev/',
 
     'http://localhost:8000',
     "http://127.0.0.1:8000",
 ]
 
 CSRF_TRUSTED_ORIGINS = [ 
-    'https://*.app.github.dev',
-    'https://vigilant-pancake-5wq9xpv4p9vc4ggx-8000.app.github.dev',
+    'https://*.github.dev',
+    'https://improved-space-bassoon-7g9xp47r4752rjw5-8000.app.github.dev/',
 
     'http://localhost:8000',
     "http://127.0.0.1:8000",
@@ -66,7 +99,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'webapp',
-    'storages',
     'axes',
     'usage_analytics',
 ]
@@ -102,45 +134,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chatbot_platform.wsgi.application'
 
-USE_GCS = False
-# GS_BUCKET_NAME = config("GS_BUCKET_NAME", default="chatbot-api-platform")
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-GS_PROJECT_ID = config("GS_PROJECT_ID", default="None")
-if USE_GCS:
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    GS_DEFAULT_ACL = 'publicRead'
-else:
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-
-# logger.info(f"DEBUG: OS environment DB_USER: {os.environ.get('DB_USER')}")
-# logger.info(f"DEBUG: Config DB_USER: {config('DB_USER')}")
-# logger.info(f"DEBUG: OS environment DB_PASSWORD: {os.environ.get('DB_PASSWORD')}")
-# logger.info(f"DEBUG: Config DB_PASSWORD: {config('DB_PASSWORD')}")
-
-USE_CLOUD_DB = config("USE_CLOUD_DB", default="True").lower() == "True"
-# logger.info(f"DEBUG: USE_CLOUD_DB resolved to: {USE_CLOUD_DB}")
-
-if USE_CLOUD_DB:
-    logger.info(f"DEBUG: Using cloud database configuration")
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    logger.info(f"DEBUG: Using local SQLite database configuration")
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -155,25 +156,23 @@ USE_I18N = True
 USE_TZ = True
 
 
-#comment out this if you want to use cloud storage
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-#===
 
 
 LOGIN_URL = '/login/'
 X_FRAME_OPTIONS = 'ALLOWALL'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GOOGLE_GENAI_API_KEY = config("GOOGLE_GENAI_API_KEY")
-
-
 #AXES CONFIG
 AXES_ENABLED = True
-AXES_FAILURE_LIMIT = 5
+AXES_FAILURE_LIMIT = 500
 AXES_COOLOFF_TIME = None
 AXES_LOCK_OUT_AT_FAILURE = True
-AXES_USE_USER_AGENT = False
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 # AXES_LOCKOUT_TEMPLATE = 'axes/locked_out.html'
 AXES_BEHIND_REVERSE_PROXY = False
 

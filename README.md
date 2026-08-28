@@ -26,8 +26,7 @@ Please see the LICENSE file for complete terms, including rules on usage, confid
 - Python 3.10+
 - pip
 - Git
-- PostgreSQL (for production)
-- Google Cloud SDK (optional, for deployment)
+- SQLite (included with Python)
 
 ------------------------------
 🧭 Clone the Repository
@@ -59,16 +58,28 @@ git branch
 # Step 5: Push to GitHub
 git push -u origin your-feature-branch-name
 
-------------------------------
 ▶️ Run the Project Locally
-------------------------------
 
--> cd chatbot_platform
--> Activate or chnage USE_CLOUD_DB = False
--> python manage.py migrate
--> python manage.py runserver
 
 Visit http://127.0.0.1:8000 in your browser.
+
+------------------------------
+📚 Document Processing
+------------------------------
+
+Knowledge-base uploads support `.txt`, `.pdf`, and `.docx` files up to 50 MB. The `.doc` extension is accepted by the form but is not currently readable by the document parser; convert legacy Word files to `.docx` first.
+
+Processing is started from the dashboard after upload:
+
+1. Upload the document.
+2. Select the processing/embed action for that knowledge base.
+3. Wait for the status to change from `processing` to `completed`.
+
+The processor reads text incrementally instead of loading a complete 50 MB document into one embedding request. Text is split into 4,000-character chunks with 400 characters of overlap. Embeddings are sent to the NVIDIA API in batches of eight, and each chunk is stored in the local FAISS index. This supports 1,000+ page text-based PDFs and DOCX files, subject to available disk space, memory, API limits, and processing time.
+
+Vector files are stored locally in `chatbot_platform/faiss_data/kb_<id>/`. Ensure this directory is writable and is persisted between deployments; otherwise uploaded knowledge bases must be embedded again after a redeployment. Processing is synchronous, so large documents can take several minutes and the browser should remain connected until it finishes.
+
+Scanned PDFs without an embedded text layer produce little or no usable content. Run OCR on those files before uploading. If processing fails, inspect the knowledge-base error message and application logs, then retry after correcting the document or API configuration.
 
 ------------------------------
 📁 Example Folder Structure (it is diffrent that orignal, cross check it once)
@@ -84,20 +95,6 @@ chatbot_platform/
 ├── requirements.txt
 └── README.txt
 
-------------------------------
-☁️ Deployment on Google Cloud
-------------------------------
-
-This app supports deployment on Google Cloud Run using Cloud Build.
-Make Sure To Use Your Own Cloud SQL, Instance, And Other Things...(Check Cloudbuild File To Get An Idea About That).
-It integrates with:
-
-- Cloud SQL for database
-- Cloud Storage for file uploads
-
-To deploy:
-
-gcloud builds submit --config cloudbuild.yaml
 
 ------------------------------
 📬 Contact

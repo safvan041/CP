@@ -3,8 +3,7 @@
 function showEmbedModal(slug) {
     const actualSlug = String(slug || '');
 
-    // The URL needs to point to the DEPLOYED Cloud Run URL, not localhost
-    const chatWidgetUrl = `https://chatbot-api-platform-29773676777.us-central1.run.app/chat/${actualSlug}/`;
+    const chatWidgetUrl = `${window.location.origin}/chat/${actualSlug}/`;
 
     // Generate a VERY simple iframe code snippet. No hardcoded styles for positioning.
     const iframeCodeString = `<iframe src="${chatWidgetUrl}" width="400" height="550" frameborder="0" title="CAPI Studio" style="border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></iframe>`;

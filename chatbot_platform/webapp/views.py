@@ -23,9 +23,9 @@ from usage_analytics.models import ChatbotUsage
 from core.models import KnowledgeBase
 
 # Standard utility imports
-from core.utils.file_reader import extract_text_from_file
+from core.utils.file_reader import iter_text_chunks
 from core.utils.vector.vector_logic import delete_vector_store as remove_faiss_data, embed_and_store, search_similar_chunks
-from .utils.genai_llm import generate_genai_response
+from .services.chat_service import generate_chat_response
 from core.utils.embeddings.embedding_service import get_embedding_model
 
 # Imports for Email Sending
@@ -247,28 +247,17 @@ def proceed_view(request, kb_id):
             raise ValueError("Knowledge Base record has no associated file.")
 
         logger.info(f"Starting synchronous embedding for KB: {kb.title} (ID: {kb.id})")
-        extracted_text = extract_text_from_file(kb.file)
+        model = get_embedding_model()
+        vector_index_name = f"kb_{kb.id}"
 
-        if extracted_text.startswith("Error:"):
-            kb.status = 'failed'
-            kb.error_message = extracted_text
-            kb.save(update_fields=['status', 'error_message'])
-            messages.error(request, extracted_text)
-            logger.error(f"Text extraction failed for KB {kb.id}: {extracted_text}")
-            return redirect("dashboard")
-
-        if not extracted_text.strip():
+        vector_count = embed_and_store(iter_text_chunks(kb.file), vector_index_name, model)
+        if not vector_count:
             kb.status = 'failed'
             kb.error_message = "The uploaded file has no readable text or is empty."
             kb.save(update_fields=['status', 'error_message'])
             messages.warning(request, "The uploaded file has no readable text or is empty.")
             logger.warning(f"No readable text found for KB {kb.id}.")
             return redirect("dashboard")
-        
-        model = get_embedding_model()
-        vector_index_name = f"kb_{kb.id}"
-
-        embed_and_store([extracted_text], vector_index_name, model)
 
         kb.widget_slug = str(uuid.uuid4())[:8] # Generates a unique 8-char slug
         kb.is_embedded = True
@@ -293,7 +282,7 @@ def proceed_view(request, kb_id):
 def delete_kb_view(request, kb_id):
     kb = get_object_or_404(KnowledgeBase, id=kb_id, user=request.user)
 
-    # Delete file from media storage (local or GCS)
+    # Delete the uploaded file from local media storage.
     if hasattr(kb, 'file') and kb.file and kb.file.storage.exists(kb.file.name):
         kb.file.delete()
         logger.info(f"Deleted media file: {kb.file.name}")
@@ -342,8 +331,7 @@ def chat_api_view(request, widget_slug):
             context = "\n".join(results) if results else "No relevant information found."
             logger.debug(f"Retrieved context for '{user_message}': {context[:100]}...")
 
-            # Note: generate_genai_response expects chat_history, so pass empty list or None
-            response_content = generate_genai_response(context, user_message)
+            response_content = generate_chat_response(context, user_message)
             logger.info(f"Chatbot response for '{user_message}': {response_content[:100]}...")
 
             # --- NEW: USAGE TRACKING (with ChatbotUsage model) ---
@@ -396,7 +384,7 @@ def chat_view(request, widget_slug):
             retrieved_chunks = search_similar_chunks(user_query, index_name, get_embedding_model())
             context = "\n".join(retrieved_chunks) if retrieved_chunks else "No relevant information found."
 
-            bot_response = generate_genai_response(context, user_query, chat_history=None) # No history passed here
+            bot_response = generate_chat_response(context, user_query)
 
         chat_history.append(("You", user_query))
         chat_history.append(("Bot", bot_response))

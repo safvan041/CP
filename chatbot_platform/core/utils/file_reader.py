@@ -19,8 +19,11 @@ except ImportError:
     Document = None
     logger.warning("python-docx not installed. DOCX files will not be processed.")
 
-# Function to extract text from a Django FileField object
-def extract_text_from_file(file_field_object):
+CHUNK_SIZE = 4000
+CHUNK_OVERLAP = 400
+
+
+def iter_text_chunks(file_field_object, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
     """
     Extracts text content from a Django FileField object (e.g., kb.file).
     It handles .txt, .pdf, and .docx files by opening them in binary mode from storage.
@@ -28,49 +31,69 @@ def extract_text_from_file(file_field_object):
     Args:
         file_field_object: A Django FileField instance (e.g., kb.file from a model instance).
 
-    Returns:
-        str: The extracted text content, or an error message if unsupported/failed.
+    Yields:
+        str: Overlapping text chunks suitable for embedding.
     """
     if not file_field_object:
         return "Error: No file object provided."
 
     file_extension = os.path.splitext(file_field_object.name)[1].lower()
-    extracted_text = ""
+    if overlap >= chunk_size:
+        raise ValueError("Chunk overlap must be smaller than chunk size.")
 
     try:
-        # Use .open('rb') to read from any backend that django-storages supports (GCS, local, etc.).
-        with file_field_object.open('rb') as f: # Open the file from storage in binary read mode
+        with file_field_object.open('rb') as file_handle:
             if file_extension == '.txt':
-                # For text files, read binary and decode to UTF-8
-                extracted_text = f.read().decode('utf-8', errors='ignore')
+                buffer = ""
+                for raw_bytes in iter(lambda: file_handle.read(1024 * 1024), b''):
+                    buffer += raw_bytes.decode('utf-8', errors='ignore')
+                    while len(buffer) >= chunk_size:
+                        yield buffer[:chunk_size].strip()
+                        buffer = buffer[chunk_size - overlap:]
+                if buffer.strip():
+                    yield buffer.strip()
             elif file_extension == '.pdf':
-                if PdfReader: # Check for the 'pypdf' import alias now
+                if PdfReader:
                     try:
-                        # pypdf.PdfReader can directly read from a file-like object
-                        reader = PdfReader(f)
+                        reader = PdfReader(file_handle)
+                        buffer = ""
                         for page in reader.pages:
                             page_text = page.extract_text()
                             if page_text:
-                                extracted_text += page_text
+                                buffer += page_text + "\n"
+                                while len(buffer) >= chunk_size:
+                                    yield buffer[:chunk_size].strip()
+                                    buffer = buffer[chunk_size - overlap:]
+                        if buffer.strip():
+                            yield buffer.strip()
                     except Exception as e:
                         logger.error(f"Error processing PDF: {file_field_object.name} - {e}", exc_info=True)
-                        extracted_text = f"Error: Could not read PDF content. Please ensure pypdf is installed and the file is valid. ({e})"
+                        raise ValueError(f"Could not read PDF content: {e}") from e
                 else:
-                    extracted_text = "Error: pypdf not available. Cannot process PDF files."
+                    raise ValueError("pypdf is not available. Cannot process PDF files.")
             elif file_extension == '.docx':
-                if Document: # Check for the 'python-docx' import alias
+                if Document:
                     try:
-                        document = Document(f) # python-docx Document can take a file-like object
-                        extracted_text = "\n".join([paragraph.text for paragraph in document.paragraphs])
+                        document = Document(file_handle)
+                        buffer = ""
+                        for paragraph in document.paragraphs:
+                            buffer += paragraph.text + "\n"
+                            while len(buffer) >= chunk_size:
+                                yield buffer[:chunk_size].strip()
+                                buffer = buffer[chunk_size - overlap:]
+                        if buffer.strip():
+                            yield buffer.strip()
                     except Exception as e:
                         logger.error(f"Error processing DOCX: {file_field_object.name} - {e}", exc_info=True)
-                        extracted_text = f"Error: Could not read DOCX content. Please ensure python-docx is installed and the file is valid. ({e})"
+                        raise ValueError(f"Could not read DOCX content: {e}") from e
                 else:
-                    extracted_text = "Error: python-docx not available. Cannot process DOCX files."
+                    raise ValueError("python-docx is not available. Cannot process DOCX files.")
             else:
-                extracted_text = f"Error: Unsupported file type: {file_extension}"
+                raise ValueError(f"Unsupported file type: {file_extension}")
     except Exception as e:
         logger.error(f"Error opening or reading file from storage: {file_field_object.name} - {e}", exc_info=True)
-        extracted_text = f"Error: Could not access file from storage: {e}"
+        raise ValueError(f"Could not access file from storage: {e}") from e
 
-    return extracted_text.strip() # Strip leading/trailing whitespace from the final text
+
+def extract_text_from_file(file_field_object):
+    return "\n".join(iter_text_chunks(file_field_object))

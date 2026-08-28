@@ -7,6 +7,7 @@ from django.contrib.auth.password_validation import validate_password # NEW: For
 from django.core.exceptions import ValidationError # NEW: For validation errors
 from django.db import transaction # NEW: For atomic save if needed
 from django.contrib.auth.hashers import make_password # NEW: For manually hashing password
+from django.conf import settings
 
 
 class KnowledgeBaseForm(forms.ModelForm):
@@ -17,6 +18,10 @@ class KnowledgeBaseForm(forms.ModelForm):
     def clean_file(self):
         file = self.cleaned_data.get('file')
         if file:
+            max_size = getattr(settings, 'MAX_KNOWLEDGE_BASE_SIZE', 50 * 1024 * 1024)
+            if file.size > max_size:
+                max_size_mb = max_size // (1024 * 1024)
+                raise forms.ValidationError(f"File size must not exceed {max_size_mb} MB.")
             allowed_extensions = ['.txt', '.pdf', '.docx', '.doc']
             extension = file.name.split('.')[-1].lower()
             if f'.{extension}' not in allowed_extensions:
