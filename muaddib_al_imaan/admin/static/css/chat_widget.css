@@ -1,0 +1,128 @@
+/* chat_widget page styles */
+body {
+    font-family: Arial, sans-serif;
+    padding: 0;
+    background: linear-gradient(to right, #add8e6, #00008b);
+    color: #111827;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+}
+
+#chat-container {
+    width: 100%;
+    max-width: 450px;
+    height: 95vh;
+    max-height: 700px;
+    margin-top: 2.5vh;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.chat-header {
+    background: linear-gradient(to right, #add8e6, #00008b);
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+#chat-box {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: scroll;
+}
+
+.msg {
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.user-msg {
+    color: #333;
+    text-align: right;
+}
+.user-msg strong {
+    color: #00008b;
+}
+
+.bot-msg {
+    color: #333;
+    text-align: left;
+}
+.bot-msg.error-msg {
+    color: #d9534f;
+}
+.bot-msg strong {
+    color: #5cb85c;
+}
+
+.references {
+    margin-top: 8px;
+    padding: 8px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #374151;
+}
+.references ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+}
+
+.timestamp {
+    font-size: 0.75rem;
+    color: #6b7280;
+    display: block;
+    margin-top: 2px;
+}
+
+#chat-form {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    background-color: #f9f9f9;
+    flex-shrink: 0;
+}
+
+#message-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+}
+#message-input:focus {
+    outline: none;
+    border-color: #00008b;
+}
+
+#chat-form button {
+    padding: 10px 15px;
+    background: #00008b;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#chat-form button:hover {
+    background: #00006b;
+}
+
+#typing-indicator {
+    padding: 0 10px 10px 10px;
+    font-style: italic;
+    color: #6b7280;
+}

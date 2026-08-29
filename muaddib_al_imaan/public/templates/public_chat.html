@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muaddin-al-imaan — {{ fiqha }} Fiqh</title>
+    <link rel="stylesheet" href="/static/css/chat_widget.css">
+</head>
+<body>
+    <div id="chat-container"
+         data-api-url="/api/chat"
+         data-fiqha="{{ fiqha }}">
+        <div class="chat-header">
+            <h2>{{ fiqha }} Fiqh</h2>
+            <p style="margin: 4px 0 0; font-size: 0.85rem;">
+                <a href="/" style="color: #fff;">Change Fiqh</a>
+            </p>
+        </div>
+        <div id="chat-box"></div>
+        <div id="typing-indicator" style="display: none;">Bot is thinking...</div>
+        <form id="chat-form">
+            <input type="text" id="message-input" placeholder="Ask a fiqh question..." autocomplete="off" required>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script src="/static/js/chat_widget.js"></script>
+</body>
+</html>

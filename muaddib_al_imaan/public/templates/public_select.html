@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muaddin-al-imaan — Select Fiqh</title>
+    <link rel="stylesheet" href="/static/css/chat_widget.css">
+    <style>
+        .fiqha-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+        .fiqha-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            text-decoration: none;
+            color: #00008b;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .fiqha-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container" style="max-width: 600px;">
+        <div class="chat-header">
+            <h2>Muaddin-al-imaan</h2>
+            <p style="margin: 4px 0 0; font-size: 0.9rem;">Select your practicing Fiqh</p>
+        </div>
+        <div class="fiqha-grid">
+            {% for fiqha in fiqhas %}
+            <a class="fiqha-card" href="/chat/{{ fiqha }}">{{ fiqha }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

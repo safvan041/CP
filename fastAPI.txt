@@ -1,0 +1,165 @@
+FastAPI Project Plan
+Goal
+A lightweight FastAPI app that reuses the existing chat theme and embedding pipeline, with two UI layers:
+
+Public page — chat-only UI (ChatGPT-style) that queries the admin-uploaded knowledge base.
+Admin page — same chat UI plus file upload and "generate embeddings" controls, with extra metadata fields.
+1. Project structure
+fastapi_app/
+├── app/
+│   ├── main.py                 # FastAPI app, routes, static mount
+│   ├── config.py               # env settings (NVIDIA keys, paths)
+│   ├── database.py             # SQLAlchemy engine/session
+│   ├── models.py               # Book, AdminUser
+│   ├── schemas.py              # Pydantic request/response models
+│   ├── auth.py                 # admin login (session/JWT)
+│   ├── services/
+│   │   ├── file_reader.py      # ported iter_text_chunks
+│   │   ├── embeddings.py       # NVIDIA embedding client
+│   │   ├── vector_store.py     # FAISS + pickle (local)
+│   │   └── chat.py             # NVIDIA chat completion
+│   └── routers/
+│       ├── public.py           # /api/chat
+│       └── admin.py            # upload, embed, list books
+├── static/
+│   ├── css/chat_widget.css     # ported ChatGPT theme
+│   └── js/chat_widget.js       # ported chat logic
+├── templates/
+│   ├── public.html             # chat-only
+│   └── admin.html              # chat + upload form
+├── data/
+│   ├── uploads/                # uploaded files
+│   └── faiss_data/             # kb_<id>/ index + chunks
+├── requirements.txt
+└── .env
+
+2. Data model
+Book table (SQLAlchemy):
+
+id
+book_name (required)
+author_name (required)
+fiqha (required — e.g., Hanafi, Shafi'i, Maliki, Hanbali, Ja'fari)
+file_path
+status (pending / processing / completed / failed)
+error_message
+created_at
+AdminUser table for the admin layer login.
+
+3. Endpoints
+Method	Path	Layer	Purpose
+GET	/	public	Chat-only UI
+POST	/api/chat	public	Query embeddings + LLM answer
+GET	/admin	admin	Admin UI (chat + upload)
+POST	/admin/login	admin	Authenticate admin
+POST	/admin/upload	admin	Upload file + metadata
+POST	/admin/embed/{book_id}	admin	Generate embeddings
+GET	/admin/books	admin	List uploaded books
+
+4. Reused components (ported from Django)
+file_reader.py → iter_text_chunks (4,000-char chunks, 400 overlap)
+vector_logic.py → FAISS IndexFlatL2 + pickle, batched embedding (8 per request)
+chat_service.py → NVIDIA chat completion with context prompt
+chat_widget.css / chat_widget.js → ChatGPT-style chat area
+
+5. Key design decisions
+Single knowledge base for public chat (the latest completed book), or a book selector if multiple books are needed.
+Admin auth via a simple session cookie or HTTP Basic; keep it minimal.
+Embedding is synchronous initially (matches current app); can move to background tasks later.
+Metadata fields (book_name, author_name, fiqha) stored on the Book record and shown in the admin list.
+
+6. Phases
+Scaffold — FastAPI app, config, static/template serving.
+Port services — file reader, embeddings, FAISS, chat.
+Public layer — chat UI + /api/chat.
+Admin layer — login, upload form with metadata, embed action.
+Polish — error handling, status display, README.
+Before I start building, a few decisions will shape the implementation:
+
+Analyzing your answers...
+
+Q: How should the admin layer be protected?
+A: we will implement proper Auth module for this inside project app/module/auth
+Q: Should public chat query one book or allow selecting among multiple uploaded books?
+A: whatever the question asked by people, the app will search it across the books which will be present under /storage/Fiqha/(Hanfi, maliki, hambali, shafi), before come to Chat Ui the app will ask users to select thier practicing Fiqha, based on user selection the app will only find the user query results on that fiqha books which will be present inside storage for each 4 fiqha, for example if any user selects hanfi, the app will only asweres the user queries based on hanfi fiqha books and in each answer it the chat will show users the refrence of top 3 book, and this rank will be decided by Admin at iupload time, as well as the Author name(book author, is any masala contains the chain of refrences the respons will show that entier cvhain refrece as well
+Q: Which database should the FastAPI app use?
+A: we will use SQLite, also we will define something in DB to store the vectors as well.
+Q: Should embedding run synchronously on upload or as a background task?
+A: Synchronous - Simpler, matches current app
+I have the full requirements now. Let me capture the key decisions and produce the refined plan.
+
+Created memory file fastapi_plan.md
+
+Here is the refined plan incorporating all your requirements.
+
+FastAPI Project Plan (Refined)
+Storage layout
+/storage/Fiqha/
+├── Hanafi/
+├── Maliki/
+├── Hanbali/
+└── Shafi/
+Each book's file lives under its Fiqha folder. Vectors are stored in SQLite (plus FAISS index files for fast search).
+
+Data model (SQLite via SQLAlchemy)
+Book
+
+id, book_name, author_name, fiqha (Hanafi/Maliki/Hanbali/Shafi)
+rank (admin-assigned priority, used to order references)
+file_path, status, error_message, created_at
+
+Chunk (vectors stored in DB)
+id, book_id (FK), fiqha, text, embedding (vector blob), chunk_index
+
+AdminUser (auth module)
+id, username, password_hash, created_at
+Auth module (app/module/auth)
+Admin login/logout with session cookie (or JWT)
+Password hashing (bcrypt/passlib)
+Protected admin routes via dependency
+
+Endpoints
+Method	Path	Layer	Purpose
+GET	/	public	Fiqha selection page
+GET	/chat/{fiqha}	public	Chat UI for selected Fiqha
+POST	/api/chat	public	Query + LLM answer with references
+GET	/admin	admin	Admin UI (chat + upload)
+POST	/auth/login	auth	Admin login
+POST	/auth/logout	auth	Admin logout
+POST	/admin/upload	admin	Upload book + metadata + rank
+POST	/admin/embed/{book_id}	admin	Generate embeddings (synchronous)
+GET	/admin/books	admin	List books by Fiqha
+
+Chat flow (public)
+User selects Fiqha (Hanafi/Maliki/Hanbali/Shafi).
+Chat UI loads for that Fiqha.
+On message: embed query → search FAISS index scoped to that Fiqha's books → retrieve top chunks.
+Rank results by admin-assigned book rank.
+Build context from top 3 books.
+LLM answers; response includes references (book name, author, fiqha) and, when present, the full chain of references from the masala.
+
+Reference display
+Each answer shows top 3 book references (ranked by admin).
+If a chunk contains a reference chain (e.g., "X narrated from Y from Z"), the full chain is preserved and shown.
+
+Phases
+Scaffold — FastAPI app, config, SQLite, static/templates.
+Auth module — app/module/auth with login/logout.
+Port services — file reader, embeddings, FAISS, chat.
+Public layer — Fiqha selection + chat UI + /api/chat.
+Admin layer — upload with metadata/rank + embed + book list.
+References — top-3 book ranking + reference chain display.
+Polish — error handling, README, .env.
+
+
+the structure is not properly defined here is what i want:
+muaddib_al_imaan <- parent dir
+|-public <-child public folder which will handle public side ops
+|-admin <-another child admin folder which will handle admin side ops.
+
+this is what i want currrently there is 3 same named folder :
+muaddib_al_imaan
+muaddib_al_imaan/muaddin_al_imaan
+muaddin_al_imaan
+
+and main.py will be on parent levl folder not as nested file.
